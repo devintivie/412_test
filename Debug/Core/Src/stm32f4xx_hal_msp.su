@@ -14,10 +14,10 @@ stm32f4xx_hal_msp.c:747:6:HAL_I2S_MspDeInit	16	static
 stm32f4xx_hal_msp.c:785:6:HAL_QSPI_MspInit	64	static
 stm32f4xx_hal_msp.c:857:6:HAL_QSPI_MspDeInit	16	static
 stm32f4xx_hal_msp.c:898:6:HAL_SD_MspInit	48	static
-stm32f4xx_hal_msp.c:947:6:HAL_SD_MspDeInit	16	static
-stm32f4xx_hal_msp.c:983:6:HAL_UART_MspInit	56	static
-stm32f4xx_hal_msp.c:1043:6:HAL_UART_MspDeInit	16	static
-stm32f4xx_hal_msp.c:1086:13:HAL_FSMC_MspInit	32	static
-stm32f4xx_hal_msp.c:1181:6:HAL_SRAM_MspInit	16	static
-stm32f4xx_hal_msp.c:1193:13:HAL_FSMC_MspDeInit	8	static
-stm32f4xx_hal_msp.c:1266:6:HAL_SRAM_MspDeInit	16	static
+stm32f4xx_hal_msp.c:953:6:HAL_SD_MspDeInit	16	static
+stm32f4xx_hal_msp.c:989:6:HAL_UART_MspInit	56	static
+stm32f4xx_hal_msp.c:1049:6:HAL_UART_MspDeInit	16	static
+stm32f4xx_hal_msp.c:1092:13:HAL_FSMC_MspInit	32	static
+stm32f4xx_hal_msp.c:1187:6:HAL_SRAM_MspInit	16	static
+stm32f4xx_hal_msp.c:1199:13:HAL_FSMC_MspDeInit	8	static
+stm32f4xx_hal_msp.c:1272:6:HAL_SRAM_MspDeInit	16	static

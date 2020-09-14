@@ -20,6 +20,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
+#include "audio_test.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -109,6 +111,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	HAL_StatusTypeDef ret;
+	uint8_t myWrite[30] = "TEST STRING";
+	uint8_t myRead[30];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -141,6 +145,7 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_UART10_Init();
   MX_USART6_UART_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
   if(ret != HAL_OK)
@@ -153,6 +158,32 @@ int main(void)
    {
  	  printf("DMA on filter not started");
    }
+
+   FATFS myFAT;
+   	FIL myFile;
+   	UINT byteCount;
+
+   	printf("path: '%s'\r\n", SDPath);
+   	double duration = 10; /*seconds*/
+	int32_t FrameCount = 40;// AUDIO_REC * 40;
+   	FRESULT fRet = 0;
+
+   	fRet = f_mount(&myFAT, SDPath, 1);
+   	int pass = 0;
+
+//   	write_PCM16_stereo_header(&myFAT, SAMPLE_RATE, FrameCount * AUDIO_REC);
+   	if(fRet == FR_OK){
+   		f_open(&myFile, "test2.txt", FA_WRITE | FA_CREATE_ALWAYS);
+   		f_write(&myFile, myWrite, 30, &byteCount);
+   		f_close(&myFile);
+
+   		f_open(&myFile, "test2.txt", FA_READ);
+   		f_read(&myFile, myRead, 5, &byteCount);
+   		f_close(&myFile);
+   	}else{
+   		printf("mount fail :(\r\n");
+   		printf("err. code: %d\r\n", fRet);
+   	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -180,6 +211,15 @@ int main(void)
 			  Value1Buf[i] = Rec1Buf[i] & 0xffff;
 		  }
 		  DmaRecBuffCplt = 0;
+
+//		  if(pass++ <= FrameCount)
+//		  {
+//			  f_open(&myFile, "test.wav", FA_WRITE | FA_CREATE_ALWAYS);
+//				f_write(&myFile, Value1Buf, AUDIO_REC, &byteCount);
+//				f_close(&myFile);
+//		  }
+
+
 	  }
     /* USER CODE END WHILE */
 
@@ -211,7 +251,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 25;
   RCC_OscInitStruct.PLL.PLLN = 192;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 8;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -574,14 +614,6 @@ static void MX_SDIO_SD_Init(void)
   hsd.Init.BusWide = SDIO_BUS_WIDE_1B;
   hsd.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd.Init.ClockDiv = 0;
-  if (HAL_SD_Init(&hsd) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_SD_ConfigWideBusOperation(&hsd, SDIO_BUS_WIDE_4B) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN SDIO_Init 2 */
 
   /* USER CODE END SDIO_Init 2 */
@@ -756,7 +788,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : SD_Detect_Pin */
   GPIO_InitStruct.Pin = SD_Detect_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SD_Detect_GPIO_Port, &GPIO_InitStruct);
 

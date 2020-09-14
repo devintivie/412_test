@@ -38,7 +38,16 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_qspi.h \
  C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_fmpi2c.h \
  C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_fmpi2c_ex.h \
- C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dfsdm.h
+ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dfsdm.h \
+ ../FATFS/App/fatfs.h \
+ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/ff.h \
+ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/integer.h \
+ ../FATFS/Target/ffconf.h ../FATFS/Target/bsp_driver_sd.h \
+ ../FATFS/Target/fatfs_platform.h \
+ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
+ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/diskio.h \
+ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/ff.h \
+ ../FATFS/Target/sd_diskio.h ../Core/Inc/audio_test.h
 
 ../Core/Inc/main.h:
 
@@ -121,3 +130,25 @@ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HA
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_fmpi2c_ex.h:
 
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dfsdm.h:
+
+../FATFS/App/fatfs.h:
+
+C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/ff.h:
+
+C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/integer.h:
+
+../FATFS/Target/ffconf.h:
+
+../FATFS/Target/bsp_driver_sd.h:
+
+../FATFS/Target/fatfs_platform.h:
+
+C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/ff_gen_drv.h:
+
+C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/diskio.h:
+
+C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src/ff.h:
+
+../FATFS/Target/sd_diskio.h:
+
+../Core/Inc/audio_test.h:
