@@ -8,10 +8,13 @@
 
 #include "audio_test.h"
 
+#include "fatfs.h"
+
 /*Return 0 on success and -1 on failure*/
 int write_PCM16_stereo_header(  FILE*   file_p, int32_t SampleRate, int32_t FrameCount)
 {
-    int ret;
+//    int ret;
+    FRESULT ret;
 
     wavfile_header_t wav_header;
     int32_t subchunk2_size;
@@ -53,12 +56,9 @@ int write_PCM16_stereo_header(  FILE*   file_p, int32_t SampleRate, int32_t Fram
     wav_header.Subchunk2ID[3] = 'a';
     wav_header.Subchunk2Size = subchunk2_size;
 
-    write_count = fwrite(   &wav_header,
-                            sizeof(wavfile_header_t), 1,
-                            file_p);
-
-    ret = (1 != write_count)? -1 : 0;
-
+    UINT byteCount;
+	ret = f_write(file_p, &wav_header, sizeof(wavfile_header_t), &byteCount);
+	ret = f_close(file_p);
     return ret;
 }
 PCM16_stereo_t *allocate_PCM16_stereo_buffer(   int32_t FrameCount)

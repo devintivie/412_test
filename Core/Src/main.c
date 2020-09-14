@@ -165,25 +165,28 @@ int main(void)
 
    	printf("path: '%s'\r\n", SDPath);
    	double duration = 10; /*seconds*/
-	int32_t FrameCount = 40;// AUDIO_REC * 40;
+	int32_t FrameCount = 200;// AUDIO_REC * 40;
    	FRESULT fRet = 0;
 
    	fRet = f_mount(&myFAT, SDPath, 1);
    	int pass = 0;
+   	char *fname = "test3.wav";
 
-//   	write_PCM16_stereo_header(&myFAT, SAMPLE_RATE, FrameCount * AUDIO_REC);
-   	if(fRet == FR_OK){
-   		f_open(&myFile, "test2.txt", FA_WRITE | FA_CREATE_ALWAYS);
-   		f_write(&myFile, myWrite, 30, &byteCount);
-   		f_close(&myFile);
+   	f_open(&myFile, fname, FA_WRITE | FA_CREATE_ALWAYS);
 
-   		f_open(&myFile, "test2.txt", FA_READ);
-   		f_read(&myFile, myRead, 5, &byteCount);
-   		f_close(&myFile);
-   	}else{
-   		printf("mount fail :(\r\n");
-   		printf("err. code: %d\r\n", fRet);
-   	}
+   	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, FrameCount * AUDIO_REC);
+//   	if(fRet == FR_OK){
+//   		f_open(&myFile, "test2.txt", FA_WRITE | FA_CREATE_ALWAYS);
+//   		f_write(&myFile, myWrite, 30, &byteCount);
+//   		f_close(&myFile);
+//
+//   		f_open(&myFile, "test2.txt", FA_READ);
+//   		f_read(&myFile, myRead, 5, &byteCount);
+//   		f_close(&myFile);
+//   	}else{
+//   		printf("mount fail :(\r\n");
+//   		printf("err. code: %d\r\n", fRet);
+//   	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -212,12 +215,12 @@ int main(void)
 		  }
 		  DmaRecBuffCplt = 0;
 
-//		  if(pass++ <= FrameCount)
-//		  {
-//			  f_open(&myFile, "test.wav", FA_WRITE | FA_CREATE_ALWAYS);
-//				f_write(&myFile, Value1Buf, AUDIO_REC, &byteCount);
-//				f_close(&myFile);
-//		  }
+		  if(pass++ <= FrameCount)
+		  {
+			  f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
+				f_write(&myFile, Value1Buf, AUDIO_REC, &byteCount);
+				f_close(&myFile);
+		  }
 
 
 	  }
