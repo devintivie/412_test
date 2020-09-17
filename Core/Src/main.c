@@ -21,11 +21,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "fatfs.h"
-#include "audio_test.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "audio_test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,10 +48,7 @@ DAC_HandleTypeDef hdac;
 
 DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
 DFSDM_Channel_HandleTypeDef hdfsdm1_channel1;
-DFSDM_Filter_HandleTypeDef hdfsdm2_filter0;
-DFSDM_Channel_HandleTypeDef hdfsdm2_channel1;
 DMA_HandleTypeDef hdma_dfsdm1_flt0;
-DMA_HandleTypeDef hdma_dfsdm2_flt0;
 
 FMPI2C_HandleTypeDef hfmpi2c1;
 
@@ -69,14 +65,23 @@ SRAM_HandleTypeDef hsram1;
 SRAM_HandleTypeDef hsram2;
 
 /* USER CODE BEGIN PV */
-#define AUDIO_REC 1024
+#define AUDIO_REC 2048
 int32_t Rec1Buf[AUDIO_REC];
 int32_t Rec2Buf[AUDIO_REC];
+//int32_t tmpBuf[AUDIO_REC];
 int32_t Value1Buf[AUDIO_REC];
 int32_t Value2Buf[AUDIO_REC];
 
 uint8_t DmaRecHalfBuffCplt=0;
 uint8_t DmaRecBuffCplt=0;
+
+FATFS myFAT;
+FIL myFile;
+UINT byteCount;
+int32_t FrameCount = 100;// AUDIO_REC * 40;
+FRESULT fRet = 0;
+int pass = 0;
+char *fname = "test4.wav";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,7 +91,6 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_DAC_Init(void);
 static void MX_DFSDM1_Init(void);
-static void MX_DFSDM2_Init(void);
 static void MX_FMPI2C1_Init(void);
 static void MX_FSMC_Init(void);
 static void MX_I2S2_Init(void);
@@ -137,7 +141,6 @@ int main(void)
   MX_ADC1_Init();
   MX_DAC_Init();
   MX_DFSDM1_Init();
-  MX_DFSDM2_Init();
   MX_FMPI2C1_Init();
   MX_FSMC_Init();
   MX_I2S2_Init();
@@ -147,34 +150,35 @@ int main(void)
   MX_USART6_UART_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
+  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
+
+
+	printf("path: '%s'\r\n", SDPath);
+//	double duration = 10; /*seconds*/
+
+
+	fRet = f_mount(&myFAT, SDPath, 1);
+
+
+	f_open(&myFile, fname, FA_WRITE | FA_CREATE_ALWAYS);
+
+	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, FrameCount * AUDIO_REC);
+
+
   ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
   if(ret != HAL_OK)
   {
 	  printf("DMA on filter not started");
   }
 
-  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm2_filter0, Rec2Buf, AUDIO_REC);
-   if(ret != HAL_OK)
-   {
- 	  printf("DMA on filter not started");
-   }
+//  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm2_filter0, Rec2Buf, AUDIO_REC);
+//   if(ret != HAL_OK)
+//   {
+// 	  printf("DMA on filter not started");
+//   }
+   HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_RESET);
 
-   FATFS myFAT;
-   	FIL myFile;
-   	UINT byteCount;
 
-   	printf("path: '%s'\r\n", SDPath);
-   	double duration = 10; /*seconds*/
-	int32_t FrameCount = 200;// AUDIO_REC * 40;
-   	FRESULT fRet = 0;
-
-   	fRet = f_mount(&myFAT, SDPath, 1);
-   	int pass = 0;
-   	char *fname = "test3.wav";
-
-   	f_open(&myFile, fname, FA_WRITE | FA_CREATE_ALWAYS);
-
-   	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, FrameCount * AUDIO_REC);
 //   	if(fRet == FR_OK){
 //   		f_open(&myFile, "test2.txt", FA_WRITE | FA_CREATE_ALWAYS);
 //   		f_write(&myFile, myWrite, 30, &byteCount);
@@ -193,16 +197,17 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  int data = 1;
-	  HAL_DFSDM_Channel_StateTypeDef status = HAL_DFSDM_ChannelGetState(&hdfsdm1_channel1);
+//	  int data = 1;
+//	  HAL_DFSDM_Channel_StateTypeDef status = HAL_DFSDM_ChannelGetState(&hdfsdm1_channel1);
 //	  HAL_StatusTypeDef clk_pres = HAL_DFSDM_ChannelPollForCkab(&hdfsdm1_channel1, 1000);
 //	  data = HAL_DFSDM_FilterGetRegularValue(&hdfsdm1_filter0, 1);
-	  printf("data = %ld\r\n", data);
+//	  printf("data = %ld\r\n", data);
 	  if(DmaRecHalfBuffCplt == 1)
 	  {
 		  for(int i = 0; i < AUDIO_REC/2; i++)
 		  {
-			  Value1Buf[i] = Rec1Buf[i] & 0xffff;
+//			  tmpBuf[i] = Rec1Buf[i];
+			  Value1Buf[i] = Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
 		  }
 		  DmaRecHalfBuffCplt = 0;
 	  }
@@ -211,7 +216,8 @@ int main(void)
 		  printf("ooo wee\r\n");
 		  for(int i = AUDIO_REC/2; i < AUDIO_REC; i++)
 		  {
-			  Value1Buf[i] = Rec1Buf[i] & 0xffff;
+//			  tmpBuf[i] = Rec1Buf[i];
+			  Value1Buf[i] = Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
 		  }
 		  DmaRecBuffCplt = 0;
 
@@ -220,6 +226,10 @@ int main(void)
 			  f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
 				f_write(&myFile, Value1Buf, AUDIO_REC, &byteCount);
 				f_close(&myFile);
+		  }
+		  if(pass >= FrameCount)
+		  {
+			  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
 		  }
 
 
@@ -397,9 +407,9 @@ static void MX_DFSDM1_Init(void)
   /* USER CODE END DFSDM1_Init 1 */
   hdfsdm1_filter0.Instance = DFSDM1_Filter0;
   hdfsdm1_filter0.Init.RegularParam.Trigger = DFSDM_FILTER_SW_TRIGGER;
-  hdfsdm1_filter0.Init.RegularParam.FastMode = DISABLE;
+  hdfsdm1_filter0.Init.RegularParam.FastMode = ENABLE;
   hdfsdm1_filter0.Init.RegularParam.DmaMode = ENABLE;
-  hdfsdm1_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_FASTSINC_ORDER;
+  hdfsdm1_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_SINC3_ORDER;
   hdfsdm1_filter0.Init.FilterParam.Oversampling = 50;
   hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1;
   if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK)
@@ -418,7 +428,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel1.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel1.Init.Awd.Oversampling = 1;
   hdfsdm1_channel1.Init.Offset = 0;
-  hdfsdm1_channel1.Init.RightBitShift = 0x00;
+  hdfsdm1_channel1.Init.RightBitShift = 0x0;
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel1) != HAL_OK)
   {
     Error_Handler();
@@ -430,59 +440,6 @@ static void MX_DFSDM1_Init(void)
   /* USER CODE BEGIN DFSDM1_Init 2 */
 
   /* USER CODE END DFSDM1_Init 2 */
-
-}
-
-/**
-  * @brief DFSDM2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_DFSDM2_Init(void)
-{
-
-  /* USER CODE BEGIN DFSDM2_Init 0 */
-
-  /* USER CODE END DFSDM2_Init 0 */
-
-  /* USER CODE BEGIN DFSDM2_Init 1 */
-
-  /* USER CODE END DFSDM2_Init 1 */
-  hdfsdm2_filter0.Instance = DFSDM2_Filter0;
-  hdfsdm2_filter0.Init.RegularParam.Trigger = DFSDM_FILTER_SW_TRIGGER;
-  hdfsdm2_filter0.Init.RegularParam.FastMode = ENABLE;
-  hdfsdm2_filter0.Init.RegularParam.DmaMode = ENABLE;
-  hdfsdm2_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_FASTSINC_ORDER;
-  hdfsdm2_filter0.Init.FilterParam.Oversampling = 50;
-  hdfsdm2_filter0.Init.FilterParam.IntOversampling = 1;
-  if (HAL_DFSDM_FilterInit(&hdfsdm2_filter0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  hdfsdm2_channel1.Instance = DFSDM2_Channel1;
-  hdfsdm2_channel1.Init.OutputClock.Activation = ENABLE;
-  hdfsdm2_channel1.Init.OutputClock.Selection = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
-  hdfsdm2_channel1.Init.OutputClock.Divider = 40;
-  hdfsdm2_channel1.Init.Input.Multiplexer = DFSDM_CHANNEL_EXTERNAL_INPUTS;
-  hdfsdm2_channel1.Init.Input.DataPacking = DFSDM_CHANNEL_STANDARD_MODE;
-  hdfsdm2_channel1.Init.Input.Pins = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm2_channel1.Init.SerialInterface.Type = DFSDM_CHANNEL_SPI_RISING;
-  hdfsdm2_channel1.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
-  hdfsdm2_channel1.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
-  hdfsdm2_channel1.Init.Awd.Oversampling = 1;
-  hdfsdm2_channel1.Init.Offset = 0;
-  hdfsdm2_channel1.Init.RightBitShift = 0x00;
-  if (HAL_DFSDM_ChannelInit(&hdfsdm2_channel1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm2_filter0, DFSDM_CHANNEL_1, DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN DFSDM2_Init 2 */
-
-  /* USER CODE END DFSDM2_Init 2 */
 
 }
 
@@ -702,9 +659,6 @@ static void MX_DMA_Init(void)
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-  /* DMA2_Stream4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream4_IRQn);
 
 }
 
@@ -773,6 +727,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B_USER_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DFSDM2_DATIN1_Pin */
+  GPIO_InitStruct.Pin = DFSDM2_DATIN1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF7_DFSDM2;
+  HAL_GPIO_Init(DFSDM2_DATIN1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LED2_GREEN_Pin */
   GPIO_InitStruct.Pin = LED2_GREEN_Pin;
@@ -847,6 +809,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
   HAL_GPIO_Init(ARD_D10_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : DFSDM2_CKOUT_Pin */
+  GPIO_InitStruct.Pin = DFSDM2_CKOUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF3_DFSDM2;
+  HAL_GPIO_Init(DFSDM2_CKOUT_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : ARD_D12_Pin ARD_D11_Pin */
   GPIO_InitStruct.Pin = ARD_D12_Pin|ARD_D11_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -860,6 +830,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(ARD_D4_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DFSDM2_DATIN7_Pin */
+  GPIO_InitStruct.Pin = DFSDM2_DATIN7_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF6_DFSDM2;
+  HAL_GPIO_Init(DFSDM2_DATIN7_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ARD_D9_Pin */
   GPIO_InitStruct.Pin = ARD_D9_Pin;
@@ -964,13 +942,15 @@ static void MX_FSMC_Init(void)
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
 
-		DmaRecHalfBuffCplt=1;
+	DmaRecHalfBuffCplt=1;
+
 
 
 }
 void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
 	DmaRecBuffCplt=1;
+
 }
 /* USER CODE END 4 */
 
