@@ -69,8 +69,8 @@ SRAM_HandleTypeDef hsram2;
 int32_t Rec1Buf[AUDIO_REC];
 int32_t Rec2Buf[AUDIO_REC];
 //int32_t tmpBuf[AUDIO_REC];
-int32_t Value1Buf[AUDIO_REC];
-int32_t Value2Buf[AUDIO_REC];
+uint16_t Value1Buf[AUDIO_REC];
+uint16_t Value2Buf[AUDIO_REC];
 
 uint8_t DmaRecHalfBuffCplt=0;
 uint8_t DmaRecBuffCplt=0;
@@ -81,7 +81,7 @@ UINT byteCount;
 int32_t FrameCount = 100;// AUDIO_REC * 40;
 FRESULT fRet = 0;
 int pass = 0;
-char *fname = "test4.wav";
+char *fname = "test_falling_2right.wav";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -207,7 +207,7 @@ int main(void)
 		  for(int i = 0; i < AUDIO_REC/2; i++)
 		  {
 //			  tmpBuf[i] = Rec1Buf[i];
-			  Value1Buf[i] = Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
+			  Value1Buf[i] = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
 		  }
 		  DmaRecHalfBuffCplt = 0;
 	  }
@@ -217,7 +217,7 @@ int main(void)
 		  for(int i = AUDIO_REC/2; i < AUDIO_REC; i++)
 		  {
 //			  tmpBuf[i] = Rec1Buf[i];
-			  Value1Buf[i] = Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
+			  Value1Buf[i] = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
 		  }
 		  DmaRecBuffCplt = 0;
 
@@ -423,7 +423,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel1.Init.Input.Multiplexer = DFSDM_CHANNEL_EXTERNAL_INPUTS;
   hdfsdm1_channel1.Init.Input.DataPacking = DFSDM_CHANNEL_STANDARD_MODE;
   hdfsdm1_channel1.Init.Input.Pins = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm1_channel1.Init.SerialInterface.Type = DFSDM_CHANNEL_SPI_RISING;
+  hdfsdm1_channel1.Init.SerialInterface.Type = DFSDM_CHANNEL_SPI_FALLING;
   hdfsdm1_channel1.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
   hdfsdm1_channel1.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel1.Init.Awd.Oversampling = 1;
