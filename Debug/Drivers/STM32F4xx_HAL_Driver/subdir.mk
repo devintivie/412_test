@@ -20,8 +20,6 @@ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HA
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_fmpi2c.c \
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_fmpi2c_ex.c \
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
-C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s.c \
-C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s_ex.c \
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
 C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_qspi.c \
@@ -52,8 +50,6 @@ OBJS += \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_fmpi2c.o \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_fmpi2c_ex.o \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_gpio.o \
-./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s.o \
-./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s_ex.o \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr.o \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr_ex.o \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_qspi.o \
@@ -84,8 +80,6 @@ C_DEPS += \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_fmpi2c.d \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_fmpi2c_ex.d \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_gpio.d \
-./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s.d \
-./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s_ex.d \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr.d \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr_ex.d \
 ./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_qspi.d \
@@ -133,10 +127,6 @@ Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_fmpi2c_ex.o: C:/Users/devin/STM32Cube
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F413xx -DDEBUG -c -I../FATFS/App -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src -I../Core/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Include -I../FATFS/Target -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_fmpi2c_ex.d" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_gpio.o: C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F413xx -DDEBUG -c -I../FATFS/App -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src -I../Core/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Include -I../FATFS/Target -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_gpio.d" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
-Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s.o: C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s.c
-	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F413xx -DDEBUG -c -I../FATFS/App -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src -I../Core/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Include -I../FATFS/Target -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s.d" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
-Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s_ex.o: C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2s_ex.c
-	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F413xx -DDEBUG -c -I../FATFS/App -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src -I../Core/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Include -I../FATFS/Target -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2s_ex.d" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr.o: C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c
 	arm-none-eabi-gcc "$<" -mcpu=cortex-m4 -std=gnu11 -g3 -DUSE_HAL_DRIVER -DSTM32F413xx -DDEBUG -c -I../FATFS/App -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Middlewares/Third_Party/FatFs/src -I../Core/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/CMSIS/Include -I../FATFS/Target -IC:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr.d" -MT"$@" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "$@"
 Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr_ex.o: C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c

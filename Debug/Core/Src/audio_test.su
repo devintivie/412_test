@@ -1,3 +1,3 @@
-audio_test.c:14:5:write_PCM16_stereo_header	88	static
-audio_test.c:64:17:allocate_PCM16_stereo_buffer	16	static
-audio_test.c:70:9:write_PCM16wav_data	32	static
+audio_test.c:15:5:write_PCM16_stereo_header	88	static
+audio_test.c:67:17:allocate_PCM16_stereo_buffer	16	static
+audio_test.c:73:9:write_PCM16wav_data	32	static

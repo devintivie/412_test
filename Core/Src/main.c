@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "audio_test.h"
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,8 +53,6 @@ DMA_HandleTypeDef hdma_dfsdm1_flt0;
 
 FMPI2C_HandleTypeDef hfmpi2c1;
 
-I2S_HandleTypeDef hi2s2;
-
 QSPI_HandleTypeDef hqspi;
 
 SD_HandleTypeDef hsd;
@@ -65,12 +64,38 @@ SRAM_HandleTypeDef hsram1;
 SRAM_HandleTypeDef hsram2;
 
 /* USER CODE BEGIN PV */
-#define AUDIO_REC 2048
+#define AUDIO_REC 1024
 int32_t Rec1Buf[AUDIO_REC];
 int32_t Rec2Buf[AUDIO_REC];
 //int32_t tmpBuf[AUDIO_REC];
-uint16_t Value1Buf[AUDIO_REC];
-uint16_t Value2Buf[AUDIO_REC];
+uint8_t Value1Buf[AUDIO_REC*2];
+uint8_t Value2Buf[AUDIO_REC*2];
+//uint8_t toneBuf[] = {0, 25, 49,
+//		70,
+//		86,
+//		96,
+//		100,
+//		96,
+//		86,
+//		70,
+//		50,
+//		25,
+//		0,
+//		-25,
+//		-49,
+//		-70,
+//		-86,
+//		-96,
+//		-100,
+//		-96,
+//		-86,
+//		-70,
+//		-50,
+//		-25};
+//uint8_t toneBuf[] = {0, 70, 100, 70, 0, -70, -100, -70};
+uint16_t toneBuf[] = {0, 2121, 3000, 2121, 0, -2121, -3000, -2121};
+uint8_t simpleBuf[16];
+
 
 uint8_t DmaRecHalfBuffCplt=0;
 uint8_t DmaRecBuffCplt=0;
@@ -78,10 +103,21 @@ uint8_t DmaRecBuffCplt=0;
 FATFS myFAT;
 FIL myFile;
 UINT byteCount;
-int32_t FrameCount = 100;// AUDIO_REC * 40;
+int32_t FrameCount = 200;// AUDIO_REC * 40;
+int32_t toneCount = 131072/8;
 FRESULT fRet = 0;
 int pass = 0;
-char *fname = "test_falling_2right.wav";
+char *fname = "test_toneb_4.wav";
+
+//float in_z1 = 0;
+//float in_z2 = 0;
+//float out_z1 = 0;
+//float out_z2 = 0;
+//float a0 = 0.8703297674831151;
+//float a1 = -1.7406595349662302;
+//float a2 = 0.8703297674831151;
+//float b1 = -1.7237741687386445;
+//float b2 = 0.7575449011938157;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,7 +129,6 @@ static void MX_DAC_Init(void);
 static void MX_DFSDM1_Init(void);
 static void MX_FMPI2C1_Init(void);
 static void MX_FSMC_Init(void);
-static void MX_I2S2_Init(void);
 static void MX_QUADSPI_Init(void);
 static void MX_SDIO_SD_Init(void);
 static void MX_UART10_Init(void);
@@ -117,6 +152,12 @@ int main(void)
 	HAL_StatusTypeDef ret;
 	uint8_t myWrite[30] = "TEST STRING";
 	uint8_t myRead[30];
+
+//	double a0 =  0.98621;
+//	double a1 = -1.9724;
+//	double a2 =  0.98621;
+//	double b1 = -1.9722;
+//	double b2 =  0.97261;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -143,7 +184,6 @@ int main(void)
   MX_DFSDM1_Init();
   MX_FMPI2C1_Init();
   MX_FSMC_Init();
-  MX_I2S2_Init();
   MX_QUADSPI_Init();
   MX_SDIO_SD_Init();
   MX_UART10_Init();
@@ -158,18 +198,22 @@ int main(void)
 
 
 	fRet = f_mount(&myFAT, SDPath, 1);
-
+	printf("header write result = %d\r\n", fRet);
 
 	f_open(&myFile, fname, FA_WRITE | FA_CREATE_ALWAYS);
 
-	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, FrameCount * AUDIO_REC);
+//	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, FrameCount * AUDIO_REC);
+	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, 131072);
+//	write_PCM_mono_2khz(&myFile);
 
 
-  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
-  if(ret != HAL_OK)
-  {
-	  printf("DMA on filter not started");
-  }
+//  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
+//  if(ret != HAL_OK)
+//  {
+//	  printf("DMA on filter not started");
+//  }
+
+  bool first = true;
 
 //  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm2_filter0, Rec2Buf, AUDIO_REC);
 //   if(ret != HAL_OK)
@@ -197,43 +241,76 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  int data = 1;
-//	  HAL_DFSDM_Channel_StateTypeDef status = HAL_DFSDM_ChannelGetState(&hdfsdm1_channel1);
-//	  HAL_StatusTypeDef clk_pres = HAL_DFSDM_ChannelPollForCkab(&hdfsdm1_channel1, 1000);
-//	  data = HAL_DFSDM_FilterGetRegularValue(&hdfsdm1_filter0, 1);
-//	  printf("data = %ld\r\n", data);
-	  if(DmaRecHalfBuffCplt == 1)
-	  {
-		  for(int i = 0; i < AUDIO_REC/2; i++)
-		  {
-//			  tmpBuf[i] = Rec1Buf[i];
-			  Value1Buf[i] = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-		  }
-		  DmaRecHalfBuffCplt = 0;
-	  }
-	  if(DmaRecBuffCplt == 1)
-	  {
-		  printf("ooo wee\r\n");
-		  for(int i = AUDIO_REC/2; i < AUDIO_REC; i++)
-		  {
-//			  tmpBuf[i] = Rec1Buf[i];
-			  Value1Buf[i] = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
-		  }
-		  DmaRecBuffCplt = 0;
+//	  uint16_t yn = 0;
+////	  int data = 1;
+////	  HAL_DFSDM_Channel_StateTypeDef status = HAL_DFSDM_ChannelGetState(&hdfsdm1_channel1);
+////	  HAL_StatusTypeDef clk_pres = HAL_DFSDM_ChannelPollForCkab(&hdfsdm1_channel1, 1000);
+////	  data = HAL_DFSDM_FilterGetRegularValue(&hdfsdm1_filter0, 1);
+////	  printf("data = %ld\r\n", data);
+//	  if(DmaRecHalfBuffCplt == 1)
+//	  {
+//		  for(int i = 0; i < AUDIO_REC/2; i++)
+//		  {
+////			  tmpBuf[i] = Rec1Buf[i];
+////			  y(n) = (coeff / 256) × (y(n-1) + x(n) - x(n-1))
+////			  if(i == 0)
+////			  {
+////				  yn = (Value1Buf[AUDIO_REC-1] + Rec1Buf[i] - Rec1Buf[AUDIO_REC-1])/10;
+////			  }
+////			  else
+////			  {
+////				  yn = (Value1Buf[i-1] + Rec1Buf[i] - Rec1Buf[i-1])/10;
+////			  }
+//
+////			  Value1Buf[i] = (uint16_t)((yn >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+//
+////			  yn = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+////			  Value1Buf[i*2] = (yn >> 8);
+////			  Value1Buf[i*2+1] = yn & 0xff;
+//		  }
+//		  DmaRecHalfBuffCplt = 0;
+//	  }
+//	  if(DmaRecBuffCplt == 1)
+//	  {
+////		  printf("ooo wee\r\n");
+//		  for(int i = AUDIO_REC/2; i < AUDIO_REC; i++)
+//		  {
+////			  tmpBuf[i] = Rec1Buf[i];
+////			  yn = (Value1Buf[i-1] + Rec1Buf[i] - Rec1Buf[i-1])/10;
+////			  Value1Buf[i] = (uint16_t)((yn >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+////			  Value1Buf[i] = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
+//			  yn = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+//			  Value1Buf[i*2] = (yn >> 8);
+//			  Value1Buf[i*2+1] = yn & 0xff;
+//		  }
+//		  DmaRecBuffCplt = 0;
 
-		  if(pass++ <= FrameCount)
+	  for(int i = 0; i < 8; i++)
+	  {
+		  simpleBuf[i*2 +1] = toneBuf[i] >> 8;
+		  simpleBuf[i*2] = toneBuf[i];
+	  }
+//
+		  if(pass++ < toneCount)
 		  {
-			  f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
-				f_write(&myFile, Value1Buf, AUDIO_REC, &byteCount);
-				f_close(&myFile);
+//			  fRet = f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
+//			  printf("f_open error == %d\r\n", fRet);
+
+			  fRet = f_write(&myFile, simpleBuf, 16, &byteCount);
+			  printf("f_write error == %d\r\n", fRet);
+			  HAL_Delay(3);
+//			  fRet = f_close(&myFile);
+//			  printf("f_close error == %d\r\n\n", fRet);
 		  }
-		  if(pass >= FrameCount)
+		  if(pass == toneCount)
 		  {
+			  fRet = f_close(&myFile);
+			  printf("f_close error == %d\r\n\n", fRet);
 			  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
 		  }
 
 
-	  }
+//	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -257,14 +334,15 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 25;
-  RCC_OscInitStruct.PLL.PLLN = 192;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 96;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 8;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -283,18 +361,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2S_APB1|RCC_PERIPHCLK_DFSDM1
-                              |RCC_PERIPHCLK_SDIO|RCC_PERIPHCLK_CLK48
-                              |RCC_PERIPHCLK_FMPI2C1;
-  PeriphClkInitStruct.PLLI2S.PLLI2SN = 50;
-  PeriphClkInitStruct.PLLI2S.PLLI2SM = 12;
-  PeriphClkInitStruct.PLLI2S.PLLI2SR = 2;
-  PeriphClkInitStruct.PLLI2S.PLLI2SQ = 2;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_DFSDM1|RCC_PERIPHCLK_SDIO
+                              |RCC_PERIPHCLK_CLK48|RCC_PERIPHCLK_FMPI2C1;
   PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLQ;
   PeriphClkInitStruct.Dfsdm1ClockSelection = RCC_DFSDM1CLKSOURCE_APB2;
   PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
-  PeriphClkInitStruct.PLLI2SSelection = RCC_PLLI2SCLKSOURCE_PLLSRC;
-  PeriphClkInitStruct.I2sApb1ClockSelection = RCC_I2SAPB1CLKSOURCE_PLLI2S;
   PeriphClkInitStruct.Fmpi2c1ClockSelection = RCC_FMPI2C1CLKSOURCE_APB;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
@@ -410,7 +481,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_filter0.Init.RegularParam.FastMode = ENABLE;
   hdfsdm1_filter0.Init.RegularParam.DmaMode = ENABLE;
   hdfsdm1_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_SINC3_ORDER;
-  hdfsdm1_filter0.Init.FilterParam.Oversampling = 50;
+  hdfsdm1_filter0.Init.FilterParam.Oversampling = 150;
   hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1;
   if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK)
   {
@@ -480,40 +551,6 @@ static void MX_FMPI2C1_Init(void)
   /* USER CODE BEGIN FMPI2C1_Init 2 */
 
   /* USER CODE END FMPI2C1_Init 2 */
-
-}
-
-/**
-  * @brief I2S2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2S2_Init(void)
-{
-
-  /* USER CODE BEGIN I2S2_Init 0 */
-
-  /* USER CODE END I2S2_Init 0 */
-
-  /* USER CODE BEGIN I2S2_Init 1 */
-
-  /* USER CODE END I2S2_Init 1 */
-  hi2s2.Instance = SPI2;
-  hi2s2.Init.Mode = I2S_MODE_MASTER_TX;
-  hi2s2.Init.Standard = I2S_STANDARD_PHILIPS;
-  hi2s2.Init.DataFormat = I2S_DATAFORMAT_16B;
-  hi2s2.Init.MCLKOutput = I2S_MCLKOUTPUT_ENABLE;
-  hi2s2.Init.AudioFreq = I2S_AUDIOFREQ_8K;
-  hi2s2.Init.CPOL = I2S_CPOL_LOW;
-  hi2s2.Init.ClockSource = I2S_CLOCK_PLL;
-  hi2s2.Init.FullDuplexMode = I2S_FULLDUPLEXMODE_ENABLE;
-  if (HAL_I2S_Init(&hi2s2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2S2_Init 2 */
-
-  /* USER CODE END I2S2_Init 2 */
 
 }
 
@@ -722,11 +759,35 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(CTP_INT_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : CODEC_ext_SD_Pin */
+  GPIO_InitStruct.Pin = CODEC_ext_SD_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF6_SPI2;
+  HAL_GPIO_Init(CODEC_ext_SD_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : CODEC_SD_Pin */
+  GPIO_InitStruct.Pin = CODEC_SD_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+  HAL_GPIO_Init(CODEC_SD_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : B_USER_Pin */
   GPIO_InitStruct.Pin = B_USER_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B_USER_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : CODEC_MCK_Pin */
+  GPIO_InitStruct.Pin = CODEC_MCK_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+  HAL_GPIO_Init(CODEC_MCK_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : DFSDM2_DATIN1_Pin */
   GPIO_InitStruct.Pin = DFSDM2_DATIN1_Pin;
@@ -817,6 +878,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF3_DFSDM2;
   HAL_GPIO_Init(DFSDM2_CKOUT_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : CODEC_CK_Pin */
+  GPIO_InitStruct.Pin = CODEC_CK_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+  HAL_GPIO_Init(CODEC_CK_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : ARD_D12_Pin ARD_D11_Pin */
   GPIO_InitStruct.Pin = ARD_D12_Pin|ARD_D11_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -846,6 +915,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
   HAL_GPIO_Init(ARD_D9_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : CODEC_WS_Pin */
+  GPIO_InitStruct.Pin = CODEC_WS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+  HAL_GPIO_Init(CODEC_WS_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -941,15 +1018,64 @@ static void MX_FSMC_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
+//	DmaRecHalfBuffCplt=1;
+	float unfiltered;
+	float tmp;
+	uint16_t finaltmp;
 
-	DmaRecHalfBuffCplt=1;
+	for(int i = 0; i < AUDIO_REC/2; i++)
+	{
+//		unfiltered = (float)Rec1Buf[i];
+//		tmp = a0* unfiltered + a1*in_z1 + a2*in_z2 - b1*out_z1 - b2 * out_z2;
+//
+//		in_z2 = in_z1;
+//		in_z1 = unfiltered;
+//		out_z2 = out_z1;
+//		out_z1 = tmp;
 
-
-
+//			Value1Buf[i] = (uint16_t)(((int32_t)tmp >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+		finaltmp = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+		Value1Buf[i*2] = finaltmp >> 8;
+		Value1Buf[i*2 +1] = finaltmp & 0xff;
+	}
 }
 void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
-	DmaRecBuffCplt=1;
+//	DmaRecBuffCplt=1;
+	float unfiltered;
+	float tmp;
+	uint16_t finaltmp;
+
+	for(int i = 0; i < AUDIO_REC/2; i++)
+	{
+//		unfiltered = (float)Rec1Buf[i];
+//		tmp = a0* unfiltered + a1*in_z1 + a2*in_z2 - b1*out_z1 - b2 * out_z2;
+//
+//		in_z2 = in_z1;
+//		in_z1 = unfiltered;
+//		out_z2 = out_z1;
+//		out_z1 = tmp;
+
+		finaltmp = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+		Value1Buf[i*2] = finaltmp >> 8;
+		Value1Buf[i*2 +1] = finaltmp & 0xff;
+	}
+
+	if(pass++ < FrameCount)
+	{
+	//			  fRet = f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
+	//			  printf("f_open error == %d\r\n", fRet);
+		fRet = f_write(&myFile, Value1Buf, AUDIO_REC*2, &byteCount);
+		printf("f_write error == %d\r\n", fRet);
+	//			  fRet = f_close(&myFile);
+	//			  printf("f_close error == %d\r\n\n", fRet);
+	}
+	if(pass == FrameCount)
+	{
+	  fRet = f_close(&myFile);
+	  printf("f_close error == %d\r\n\n", fRet);
+	  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
+	}
 
 }
 /* USER CODE END 4 */

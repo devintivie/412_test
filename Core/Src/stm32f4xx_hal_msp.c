@@ -285,7 +285,7 @@ void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef* hdfsdm_filter)
     hdma_dfsdm1_flt0.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
     hdma_dfsdm1_flt0.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
     hdma_dfsdm1_flt0.Init.Mode = DMA_CIRCULAR;
-    hdma_dfsdm1_flt0.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_dfsdm1_flt0.Init.Priority = DMA_PRIORITY_VERY_HIGH;
     hdma_dfsdm1_flt0.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_dfsdm1_flt0) != HAL_OK)
     {
@@ -481,114 +481,6 @@ void HAL_FMPI2C_MspDeInit(FMPI2C_HandleTypeDef* hfmpi2c)
   /* USER CODE BEGIN FMPI2C1_MspDeInit 1 */
 
   /* USER CODE END FMPI2C1_MspDeInit 1 */
-  }
-
-}
-
-/**
-* @brief I2S MSP Initialization
-* This function configures the hardware resources used in this example
-* @param hi2s: I2S handle pointer
-* @retval None
-*/
-void HAL_I2S_MspInit(I2S_HandleTypeDef* hi2s)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(hi2s->Instance==SPI2)
-  {
-  /* USER CODE BEGIN SPI2_MspInit 0 */
-
-  /* USER CODE END SPI2_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_SPI2_CLK_ENABLE();
-  
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**I2S2 GPIO Configuration    
-    PC2     ------> I2S2_ext_SD
-    PC3     ------> I2S2_SD
-    PA3     ------> I2S2_MCK
-    PD3     ------> I2S2_CK
-    PB9     ------> I2S2_WS 
-    */
-    GPIO_InitStruct.Pin = CODEC_ext_SD_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF6_SPI2;
-    HAL_GPIO_Init(CODEC_ext_SD_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = CODEC_SD_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-    HAL_GPIO_Init(CODEC_SD_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = CODEC_MCK_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-    HAL_GPIO_Init(CODEC_MCK_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = CODEC_CK_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-    HAL_GPIO_Init(CODEC_CK_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = CODEC_WS_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-    HAL_GPIO_Init(CODEC_WS_GPIO_Port, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN SPI2_MspInit 1 */
-
-  /* USER CODE END SPI2_MspInit 1 */
-  }
-
-}
-
-/**
-* @brief I2S MSP De-Initialization
-* This function freeze the hardware resources used in this example
-* @param hi2s: I2S handle pointer
-* @retval None
-*/
-void HAL_I2S_MspDeInit(I2S_HandleTypeDef* hi2s)
-{
-  if(hi2s->Instance==SPI2)
-  {
-  /* USER CODE BEGIN SPI2_MspDeInit 0 */
-
-  /* USER CODE END SPI2_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_SPI2_CLK_DISABLE();
-  
-    /**I2S2 GPIO Configuration    
-    PC2     ------> I2S2_ext_SD
-    PC3     ------> I2S2_SD
-    PA3     ------> I2S2_MCK
-    PD3     ------> I2S2_CK
-    PB9     ------> I2S2_WS 
-    */
-    HAL_GPIO_DeInit(GPIOC, CODEC_ext_SD_Pin|CODEC_SD_Pin);
-
-    HAL_GPIO_DeInit(CODEC_MCK_GPIO_Port, CODEC_MCK_Pin);
-
-    HAL_GPIO_DeInit(CODEC_CK_GPIO_Port, CODEC_CK_Pin);
-
-    HAL_GPIO_DeInit(CODEC_WS_GPIO_Port, CODEC_WS_Pin);
-
-  /* USER CODE BEGIN SPI2_MspDeInit 1 */
-
-  /* USER CODE END SPI2_MspDeInit 1 */
   }
 
 }

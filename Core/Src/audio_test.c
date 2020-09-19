@@ -10,8 +10,9 @@
 
 #include "fatfs.h"
 
+
 /*Return 0 on success and -1 on failure*/
-int write_PCM16_stereo_header(  FILE*   file_p, int32_t SampleRate, int32_t FrameCount)
+int write_PCM16_stereo_header(FILE* file_p, int32_t SampleRate, int32_t FrameCount)
 {
 //    int ret;
     FRESULT ret;
@@ -58,7 +59,9 @@ int write_PCM16_stereo_header(  FILE*   file_p, int32_t SampleRate, int32_t Fram
 
     UINT byteCount;
 	ret = f_write(file_p, &wav_header, sizeof(wavfile_header_t), &byteCount);
-	ret = f_close(file_p);
+	printf("header write result = %d\r\n", ret);
+//	ret = f_close(file_p);
+//	printf("header close result = %d\r\n", ret);
     return ret;
 }
 PCM16_stereo_t *allocate_PCM16_stereo_buffer(   int32_t FrameCount)
