@@ -93,8 +93,8 @@ uint8_t Value2Buf[AUDIO_REC*2];
 //		-50,
 //		-25};
 //uint8_t toneBuf[] = {0, 70, 100, 70, 0, -70, -100, -70};
-uint16_t toneBuf[] = {0, 2121, 3000, 2121, 0, -2121, -3000, -2121};
-uint8_t simpleBuf[16];
+//uint16_t toneBuf[] = {0, 2121, 3000, 2121, 0, -2121, -3000, -2121};
+//uint8_t simpleBuf[16];
 
 
 uint8_t DmaRecHalfBuffCplt=0;
@@ -104,20 +104,20 @@ FATFS myFAT;
 FIL myFile;
 UINT byteCount;
 int32_t FrameCount = 200;// AUDIO_REC * 40;
-int32_t toneCount = 131072/8;
+//int32_t toneCount = 131072/8;
 FRESULT fRet = 0;
 int pass = 0;
-char *fname = "test_toneb_4.wav";
+char *fname = "test_mic6_music_biquad.wav";
 
-//float in_z1 = 0;
-//float in_z2 = 0;
-//float out_z1 = 0;
-//float out_z2 = 0;
-//float a0 = 0.8703297674831151;
-//float a1 = -1.7406595349662302;
-//float a2 = 0.8703297674831151;
-//float b1 = -1.7237741687386445;
-//float b2 = 0.7575449011938157;
+float in_z1 = 0;
+float in_z2 = 0;
+float out_z1 = 0;
+float out_z2 = 0;
+float a0 = 0.8703297674831151;
+float a1 = -1.7406595349662302;
+float a2 = 0.8703297674831151;
+float b1 = -1.7237741687386445;
+float b2 = 0.7575449011938157;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -150,8 +150,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	HAL_StatusTypeDef ret;
-	uint8_t myWrite[30] = "TEST STRING";
-	uint8_t myRead[30];
+//	uint8_t myWrite[30] = "TEST STRING";
+//	uint8_t myRead[30];
 
 //	double a0 =  0.98621;
 //	double a1 = -1.9724;
@@ -207,11 +207,11 @@ int main(void)
 //	write_PCM_mono_2khz(&myFile);
 
 
-//  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
-//  if(ret != HAL_OK)
-//  {
-//	  printf("DMA on filter not started");
-//  }
+  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
+  if(ret != HAL_OK)
+  {
+	  printf("DMA on filter not started");
+  }
 
   bool first = true;
 
@@ -285,29 +285,29 @@ int main(void)
 //		  }
 //		  DmaRecBuffCplt = 0;
 
-	  for(int i = 0; i < 8; i++)
-	  {
-		  simpleBuf[i*2 +1] = toneBuf[i] >> 8;
-		  simpleBuf[i*2] = toneBuf[i];
-	  }
+//	  for(int i = 0; i < 8; i++)
+//	  {
+//		  simpleBuf[i*2 +1] = toneBuf[i] >> 8;
+//		  simpleBuf[i*2] = toneBuf[i];
+//	  }
+////
+//		  if(pass++ < toneCount)
+//		  {
+////			  fRet = f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
+////			  printf("f_open error == %d\r\n", fRet);
 //
-		  if(pass++ < toneCount)
-		  {
-//			  fRet = f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
-//			  printf("f_open error == %d\r\n", fRet);
-
-			  fRet = f_write(&myFile, simpleBuf, 16, &byteCount);
-			  printf("f_write error == %d\r\n", fRet);
-			  HAL_Delay(3);
+//			  fRet = f_write(&myFile, simpleBuf, 16, &byteCount);
+//			  printf("f_write error == %d\r\n", fRet);
+//			  HAL_Delay(3);
+////			  fRet = f_close(&myFile);
+////			  printf("f_close error == %d\r\n\n", fRet);
+//		  }
+//		  if(pass == toneCount)
+//		  {
 //			  fRet = f_close(&myFile);
 //			  printf("f_close error == %d\r\n\n", fRet);
-		  }
-		  if(pass == toneCount)
-		  {
-			  fRet = f_close(&myFile);
-			  printf("f_close error == %d\r\n\n", fRet);
-			  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
-		  }
+//			  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
+//		  }
 
 
 //	  }
@@ -1025,18 +1025,24 @@ void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_
 
 	for(int i = 0; i < AUDIO_REC/2; i++)
 	{
-//		unfiltered = (float)Rec1Buf[i];
-//		tmp = a0* unfiltered + a1*in_z1 + a2*in_z2 - b1*out_z1 - b2 * out_z2;
-//
-//		in_z2 = in_z1;
-//		in_z1 = unfiltered;
-//		out_z2 = out_z1;
-//		out_z1 = tmp;
+		unfiltered = (float)Rec1Buf[i];
+		tmp = a0* unfiltered + a1*in_z1 + a2*in_z2 - b1*out_z1 - b2 * out_z2;
+
+		in_z2 = in_z1;
+		in_z1 = unfiltered;
+		out_z2 = out_z1;
+		out_z1 = tmp;
 
 //			Value1Buf[i] = (uint16_t)(((int32_t)tmp >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-		finaltmp = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-		Value1Buf[i*2] = finaltmp >> 8;
-		Value1Buf[i*2 +1] = finaltmp & 0xff;
+		finaltmp = (uint16_t)(((int32_t)tmp >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+		Value1Buf[i*2 + 1] = finaltmp >> 8;
+		Value1Buf[i*2] = finaltmp & 0xff;
+
+//		for(int i = 0; i < 8; i++)
+//		//	  {
+//		//		  simpleBuf[i*2 +1] = toneBuf[i] >> 8;
+//		//		  simpleBuf[i*2] = toneBuf[i];
+//		//	  }
 	}
 }
 void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
@@ -1046,19 +1052,19 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 	float tmp;
 	uint16_t finaltmp;
 
-	for(int i = 0; i < AUDIO_REC/2; i++)
+	for(int i = AUDIO_REC/2; i < AUDIO_REC; i++)
 	{
-//		unfiltered = (float)Rec1Buf[i];
-//		tmp = a0* unfiltered + a1*in_z1 + a2*in_z2 - b1*out_z1 - b2 * out_z2;
-//
-//		in_z2 = in_z1;
-//		in_z1 = unfiltered;
-//		out_z2 = out_z1;
-//		out_z1 = tmp;
+		unfiltered = (float)Rec1Buf[i];
+		tmp = a0* unfiltered + a1*in_z1 + a2*in_z2 - b1*out_z1 - b2 * out_z2;
 
-		finaltmp = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-		Value1Buf[i*2] = finaltmp >> 8;
-		Value1Buf[i*2 +1] = finaltmp & 0xff;
+		in_z2 = in_z1;
+		in_z1 = unfiltered;
+		out_z2 = out_z1;
+		out_z1 = tmp;
+
+		finaltmp = (uint16_t)(((int32_t)tmp >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
+		Value1Buf[i*2 + 1] = finaltmp >> 8;
+		Value1Buf[i*2] = finaltmp & 0xff;
 	}
 
 	if(pass++ < FrameCount)
