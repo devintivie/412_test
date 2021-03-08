@@ -17,7 +17,6 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "fatfs.h"
@@ -25,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "audio_test.h"
+#include "wifi_helpers.h"
 #include <stdbool.h>
 /* USER CODE END Includes */
 
@@ -57,7 +57,8 @@ QSPI_HandleTypeDef hqspi;
 
 SD_HandleTypeDef hsd;
 
-UART_HandleTypeDef huart10;
+SPI_HandleTypeDef hspi3;
+
 UART_HandleTypeDef huart6;
 
 SRAM_HandleTypeDef hsram1;
@@ -137,8 +138,8 @@ static void MX_FMPI2C1_Init(void);
 static void MX_FSMC_Init(void);
 static void MX_QUADSPI_Init(void);
 static void MX_SDIO_SD_Init(void);
-static void MX_UART10_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -192,11 +193,19 @@ int main(void)
   MX_FSMC_Init();
   MX_QUADSPI_Init();
   MX_SDIO_SD_Init();
-  MX_UART10_Init();
   MX_USART6_UART_Init();
   MX_FATFS_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
+
+  ConnectWifi(&hspi3);
+  WifiStartup();
+
+  SetSSID();
+//  GetWifiConnectionStatus();
+//  SendHelpCommand();
+//  GetHelpCommand();
 
 
 	printf("path: '%s'\r\n", SDPath);
@@ -218,104 +227,14 @@ int main(void)
   {
 	  printf("DMA on filter not started");
   }
-
-//
-//  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm2_filter0, Rec2Buf, AUDIO_REC);
-//   if(ret != HAL_OK)
-//   {
-// 	  printf("DMA on filter not started");
-//   }
    HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_RESET);
-
-
-//   	if(fRet == FR_OK){
-//   		f_open(&myFile, "test2.txt", FA_WRITE | FA_CREATE_ALWAYS);
-//   		f_write(&myFile, myWrite, 30, &byteCount);
-//   		f_close(&myFile);
-//
-//   		f_open(&myFile, "test2.txt", FA_READ);
-//   		f_read(&myFile, myRead, 5, &byteCount);
-//   		f_close(&myFile);
-//   	}else{
-//   		printf("mount fail :(\r\n");
-//   		printf("err. code: %d\r\n", fRet);
-//   	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  uint16_t yn = 0;
-////	  int data = 1;
-////	  HAL_DFSDM_Channel_StateTypeDef status = HAL_DFSDM_ChannelGetState(&hdfsdm1_channel1);
-////	  HAL_StatusTypeDef clk_pres = HAL_DFSDM_ChannelPollForCkab(&hdfsdm1_channel1, 1000);
-////	  data = HAL_DFSDM_FilterGetRegularValue(&hdfsdm1_filter0, 1);
-////	  printf("data = %ld\r\n", data);
-//	  if(DmaRecHalfBuffCplt == 1)
-//	  {
-//		  for(int i = 0; i < AUDIO_REC/2; i++)
-//		  {
-////			  tmpBuf[i] = Rec1Buf[i];
-////			  y(n) = (coeff / 256) × (y(n-1) + x(n) - x(n-1))
-////			  if(i == 0)
-////			  {
-////				  yn = (Value1Buf[AUDIO_REC-1] + Rec1Buf[i] - Rec1Buf[AUDIO_REC-1])/10;
-////			  }
-////			  else
-////			  {
-////				  yn = (Value1Buf[i-1] + Rec1Buf[i] - Rec1Buf[i-1])/10;
-////			  }
-//
-////			  Value1Buf[i] = (uint16_t)((yn >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-//
-////			  yn = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-////			  Value1Buf[i*2] = (yn >> 8);
-////			  Value1Buf[i*2+1] = yn & 0xff;
-//		  }
-//		  DmaRecHalfBuffCplt = 0;
-//	  }
-//	  if(DmaRecBuffCplt == 1)
-//	  {
-////		  printf("ooo wee\r\n");
-//		  for(int i = AUDIO_REC/2; i < AUDIO_REC; i++)
-//		  {
-////			  tmpBuf[i] = Rec1Buf[i];
-////			  yn = (Value1Buf[i-1] + Rec1Buf[i] - Rec1Buf[i-1])/10;
-////			  Value1Buf[i] = (uint16_t)((yn >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-////			  Value1Buf[i] = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//Rec1Buf[i];//(Rec1Buf[i] >> 8) & 0xffff;
-//			  yn = (uint16_t)((Rec1Buf[i] >> 8) & 0xffff);//(Rec1Buf[i] >> 8) & 0xffff;
-//			  Value1Buf[i*2] = (yn >> 8);
-//			  Value1Buf[i*2+1] = yn & 0xff;
-//		  }
-//		  DmaRecBuffCplt = 0;
 
-//	  for(int i = 0; i < 8; i++)
-//	  {
-//		  simpleBuf[i*2 +1] = toneBuf[i] >> 8;
-//		  simpleBuf[i*2] = toneBuf[i];
-//	  }
-////
-//		  if(pass++ < toneCount)
-//		  {
-////			  fRet = f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
-////			  printf("f_open error == %d\r\n", fRet);
-//
-//			  fRet = f_write(&myFile, simpleBuf, 16, &byteCount);
-//			  printf("f_write error == %d\r\n", fRet);
-//			  HAL_Delay(3);
-////			  fRet = f_close(&myFile);
-////			  printf("f_close error == %d\r\n\n", fRet);
-//		  }
-//		  if(pass == toneCount)
-//		  {
-//			  fRet = f_close(&myFile);
-//			  printf("f_close error == %d\r\n\n", fRet);
-//			  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
-//		  }
-
-
-//	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -333,11 +252,12 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -353,7 +273,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -395,7 +315,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
@@ -413,7 +333,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
   sConfig.Channel = ADC_CHANNEL_10;
   sConfig.Rank = 1;
@@ -445,14 +365,14 @@ static void MX_DAC_Init(void)
   /* USER CODE BEGIN DAC_Init 1 */
 
   /* USER CODE END DAC_Init 1 */
-  /** DAC Initialization 
+  /** DAC Initialization
   */
   hdac.Instance = DAC;
   if (HAL_DAC_Init(&hdac) != HAL_OK)
   {
     Error_Handler();
   }
-  /** DAC channel OUT1 config 
+  /** DAC channel OUT1 config
   */
   sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
@@ -547,7 +467,7 @@ static void MX_FMPI2C1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure Analogue filter 
+  /** Configure Analogue filter
   */
   if (HAL_FMPI2CEx_ConfigAnalogFilter(&hfmpi2c1, FMPI2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
@@ -623,35 +543,40 @@ static void MX_SDIO_SD_Init(void)
 }
 
 /**
-  * @brief UART10 Initialization Function
+  * @brief SPI3 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_UART10_Init(void)
+static void MX_SPI3_Init(void)
 {
 
-  /* USER CODE BEGIN UART10_Init 0 */
+  /* USER CODE BEGIN SPI3_Init 0 */
 
-  /* USER CODE END UART10_Init 0 */
+  /* USER CODE END SPI3_Init 0 */
 
-  /* USER CODE BEGIN UART10_Init 1 */
+  /* USER CODE BEGIN SPI3_Init 1 */
 
-  /* USER CODE END UART10_Init 1 */
-  huart10.Instance = UART10;
-  huart10.Init.BaudRate = 115200;
-  huart10.Init.WordLength = UART_WORDLENGTH_8B;
-  huart10.Init.StopBits = UART_STOPBITS_1;
-  huart10.Init.Parity = UART_PARITY_NONE;
-  huart10.Init.Mode = UART_MODE_TX_RX;
-  huart10.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart10.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart10) != HAL_OK)
+  /* USER CODE END SPI3_Init 1 */
+  /* SPI3 parameter configuration*/
+  hspi3.Instance = SPI3;
+  hspi3.Init.Mode = SPI_MODE_MASTER;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi3.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi3.Init.NSS = SPI_NSS_SOFT;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi3.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi3) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN UART10_Init 2 */
+  /* USER CODE BEGIN SPI3_Init 2 */
 
-  /* USER CODE END UART10_Init 2 */
+  /* USER CODE END SPI3_Init 2 */
 
 }
 
@@ -688,10 +613,10 @@ static void MX_USART6_UART_Init(void)
 
 }
 
-/** 
+/**
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
+static void MX_DMA_Init(void)
 {
 
   /* DMA controller clock enable */
@@ -733,7 +658,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, LCD_CTP_RST_Pin|LCD_TE_Pin|WIFI_WKUP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, USB_OTG_FS_PWR_EN_Pin|ARD_D2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, USB_OTG_FS_PWR_EN_Pin|WIFI_SPI_CSN_Pin|ARD_D2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LED1_RED_Pin MEMS_LED_Pin LCD_BL_CTRL_Pin */
   GPIO_InitStruct.Pin = LED1_RED_Pin|MEMS_LED_Pin|LCD_BL_CTRL_Pin;
@@ -831,14 +756,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ARD_D13_Pin */
-  GPIO_InitStruct.Pin = ARD_D13_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_SPI3;
-  HAL_GPIO_Init(ARD_D13_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pins : LCD_CTP_RST_Pin LCD_TE_Pin WIFI_WKUP_Pin */
   GPIO_InitStruct.Pin = LCD_CTP_RST_Pin|LCD_TE_Pin|WIFI_WKUP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -852,8 +769,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USB_OTG_FS_PWR_EN_Pin ARD_D2_Pin */
-  GPIO_InitStruct.Pin = USB_OTG_FS_PWR_EN_Pin|ARD_D2_Pin;
+  /*Configure GPIO pins : USB_OTG_FS_PWR_EN_Pin WIFI_SPI_CSN_Pin ARD_D2_Pin */
+  GPIO_InitStruct.Pin = USB_OTG_FS_PWR_EN_Pin|WIFI_SPI_CSN_Pin|ARD_D2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -891,13 +808,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(CODEC_CK_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ARD_D12_Pin ARD_D11_Pin */
-  GPIO_InitStruct.Pin = ARD_D12_Pin|ARD_D11_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pin : WIFI_DRDY_Pin */
+  GPIO_InitStruct.Pin = WIFI_DRDY_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(WIFI_DRDY_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ARD_D4_Pin */
   GPIO_InitStruct.Pin = ARD_D4_Pin;
@@ -1148,7 +1063,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

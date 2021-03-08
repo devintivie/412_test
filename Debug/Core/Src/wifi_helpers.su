@@ -1,0 +1,12 @@
+wifi_helpers.c:17:6:ConnectWifi	16	static
+wifi_helpers.c:23:6:Wifi_ChipDeselect	8	static
+wifi_helpers.c:29:6:Wifi_ChipSelect	8	static
+wifi_helpers.c:34:9:GetCmdDataReady	8	static
+wifi_helpers.c:39:6:IsCommandPhaseReady	8	static
+wifi_helpers.c:48:6:IsDataPhaseReady	8	static
+wifi_helpers.c:58:6:GetVersion	64	dynamic
+wifi_helpers.c:81:6:SendHelpCommand	24	static
+wifi_helpers.c:97:6:GetHelpCommand	24	static
+wifi_helpers.c:123:6:WifiStartup	32	static
+wifi_helpers.c:163:6:GetWifiConnectionStatus	80	dynamic
+wifi_helpers.c:232:6:SetSSID	120	dynamic
