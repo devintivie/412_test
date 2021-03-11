@@ -13,10 +13,12 @@
 #include <stdbool.h>
 
 void ConnectWifi(SPI_HandleTypeDef *spidef);
+void Wifi_Init();
 void WifiStartup();
 void GetWifiConnectionStatus();
 void GetVersion();
-void SetSSID();
+void StartJoinNetwork(char *ssid, char *pw);
+void StartTCP(int port);
 
 void SendHelpCommand();
 

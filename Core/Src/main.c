@@ -142,6 +142,8 @@ static void MX_USART6_UART_Init(void);
 static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 
+
+void InitWifi();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -198,11 +200,7 @@ int main(void)
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
-
-  ConnectWifi(&hspi3);
-  WifiStartup();
-
-  SetSSID();
+  InitWifi();
 //  GetWifiConnectionStatus();
 //  SendHelpCommand();
 //  GetHelpCommand();
@@ -975,6 +973,7 @@ void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_
 //		//	  }
 	}
 }
+
 void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
 //	DmaRecBuffCplt=1;
@@ -1040,6 +1039,17 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 	pass++;
 
 }
+
+void InitWifi()
+{
+	ConnectWifi(&hspi3);
+	Wifi_Init();
+
+
+//	SetSSID();
+}
+
+
 /* USER CODE END 4 */
 
 /**
