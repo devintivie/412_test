@@ -71,15 +71,15 @@ void GetSPIResponse()
 	while(!IsDataPhaseReady())
 	{
 		checkReady = GetCmdDataReady();
-		printf("Wait for CMD/DATARDY to be high again [%d]\r\n", checkReady);
+//		printf("Wait for CMD/DATARDY to be high again [%d]\r\n", checkReady);
 
 	}
 	int length = 1;
 	uint16_t wb2[] = { 0x0A0A };
 	uint16_t rb2[length];
 
-	checkReady = GetCmdDataReady();
-	printf("Starting read data phase, checkReady = [%d]\r\n", checkReady);
+//	checkReady = GetCmdDataReady();
+//	printf("Starting read data phase, checkReady = [%d]\r\n", checkReady);
 	Wifi_ChipSelect();
 
 	int i = 0;
@@ -96,7 +96,7 @@ void GetSPIResponse()
 		//		uint16_t first = (uint16_t)rb2[0];// && 0xff;
 //		uint16_t second = (*rb2 && 0xff00) >> 8;//   tmp[i*2+1] << 8;
 
-		printf("wb2[i] = %0x\r\n", wb2[0]);
+//		printf("wb2[i] = %0x\r\n", wb2[0]);
 		if(first != 0x15)
 		{
 			spi_response[index++] = first;
@@ -112,7 +112,7 @@ void GetSPIResponse()
 	printf("%s\r\n", spi_response);
 
 	Wifi_ChipDeselect();
-	printf("ChipDeselect == [%d]\r\n", checkReady);
+//	printf("ChipDeselect == [%d]\r\n", checkReady);
 }
 
 void SendSPICommand(char *command)
@@ -128,12 +128,12 @@ void SendSPICommand(char *command)
 		uint16_t hi = command[i*2+1] << 8;
 		wb[i] = lo | hi;
 
-		printf("wb[i] = %0x\r\n", wb[i]);
+//		printf("wb[i] = %0x\r\n", wb[i]);
 	}
 	uint16_t rb[length];
 
 	//Wait for chip to be ready for command
-	printf("waiting for chip to be ready to send spi command\r\n");
+//	printf("waiting for chip to be ready to send spi command\r\n");
 	while(!IsCommandPhaseReady())
 	{
 
@@ -269,7 +269,7 @@ void GetWifiConnectionStatus()
 	do
 	{
 		checkReady = (uint8_t)HAL_GPIO_ReadPin(WIFI_DRDY_GPIO_Port, WIFI_DRDY_Pin);
-		printf("ChipDeselect == [%d]\r\n", checkReady);
+//		printf("ChipDeselect == [%d]\r\n", checkReady);
 	}
 	while(checkReady == 0);
 
@@ -280,21 +280,21 @@ void GetWifiConnectionStatus()
 	HAL_SPI_TransmitReceive(&wifi_spi, &wb, &rb, length, HAL_MAX_DELAY);
 	//
 	checkReady = (uint8_t)HAL_GPIO_ReadPin(WIFI_DRDY_GPIO_Port, WIFI_DRDY_Pin);
-	printf("sending command checkReady should be high checkReady == [%d]\r\n", checkReady);
+//	printf("sending command checkReady should be high checkReady == [%d]\r\n", checkReady);
 
-	printf("read buffer should be all 0x15\r\n");
-	for(int i = 0; i < length; i++)
-	{
-		printf("i = %d, value = %0x\r\n", i, rb[i]);
-	}
+//	printf("read buffer should be all 0x15\r\n");
+//	for(int i = 0; i < length; i++)
+//	{
+//		printf("i = %d, value = %0x\r\n", i, rb[i]);
+//	}
 
 	Wifi_ChipDeselect();
-	printf("Chip Deselect\r\n\n");
+//	printf("Chip Deselect\r\n\n");
 	//Wait for CMD/DATARDY to be high again
 	do
 	{
 		checkReady = (uint8_t)HAL_GPIO_ReadPin(WIFI_DRDY_GPIO_Port, WIFI_DRDY_Pin);
-		printf("Wait for CMD/DATARDY to be high again [%d]\r\n", checkReady);
+//		printf("Wait for CMD/DATARDY to be high again [%d]\r\n", checkReady);
 	}
 	while(checkReady == 0);
 
@@ -308,7 +308,7 @@ void GetWifiConnectionStatus()
 	uint16_t rb2[length];
 	checkReady = (uint8_t)HAL_GPIO_ReadPin(WIFI_DRDY_GPIO_Port, WIFI_DRDY_Pin);
 
-	printf("Starting read data phase, checkReady = [%d]\r\n", checkReady);
+//	printf("Starting read data phase, checkReady = [%d]\r\n", checkReady);
 	Wifi_ChipSelect();
 
 	int i = 0;
@@ -317,14 +317,14 @@ void GetWifiConnectionStatus()
 		HAL_SPI_TransmitReceive(&wifi_spi, &wb2, &rb2, length, HAL_MAX_DELAY);
 		checkReady = (uint8_t)HAL_GPIO_ReadPin(WIFI_DRDY_GPIO_Port, WIFI_DRDY_Pin);
 
-		printf("i = %d, value = %0x, %0x\r\n", i, rb2[1], rb2[0]);
+//		printf("i = %d, value = %0x, %0x\r\n", i, rb2[1], rb2[0]);
 		i++;
 
 	}
 
 
 	Wifi_ChipDeselect();
-	printf("ChipDeselect == [%d]\r\n", checkReady);
+//	printf("ChipDeselect == [%d]\r\n", checkReady);
 }
 
 void SetSSID()
@@ -343,18 +343,18 @@ void SetSSID()
 		uint16_t hi = tmp[i*2+1] << 8;
 		wb[i] = lo | hi;
 
-		printf("wb[i] = %0x\r\n", wb[i]);
+//		printf("wb[i] = %0x\r\n", wb[i]);
 	}
 	uint16_t rb[length];
 
 	//Wait for chip to be ready for command
-	printf("waiting for chip to be ready for first command\r\n");
+//	printf("waiting for chip to be ready for first command\r\n");
 	while(!IsCommandPhaseReady())
 	{
 
 	}
 
-	printf("ready for first command\r\n");
+//	printf("ready for first command\r\n");
 
 //	//Wait for chip to be ready for command
 //	do
@@ -371,7 +371,7 @@ void SetSSID()
 	HAL_SPI_TransmitReceive(&wifi_spi, &wb, &rb, length, HAL_MAX_DELAY);
 	//
 	checkReady = (uint8_t)HAL_GPIO_ReadPin(WIFI_DRDY_GPIO_Port, WIFI_DRDY_Pin);
-	printf("sending command checkReady should be high checkReady == [%d]\r\n", checkReady);
+//	printf("sending command checkReady should be high checkReady == [%d]\r\n", checkReady);
 
 	printf("read buffer should be all 0x15\r\n");
 	for(int i = 0; i < length; i++)
@@ -448,6 +448,27 @@ void SetSSID()
 
 	Wifi_ChipDeselect();
 	printf("ChipDeselect == [%d]\r\n", checkReady);
+}
+
+void SetProductName(char *name)
+{
+	uint8_t checkReady;
+	char command[] = "ZN=";
+
+	strcpy(full_command, command);
+	strcat(full_command, name);
+	strcat(full_command, CR);
+
+	int totalLength = strlen(full_command);
+//	printf("total length before = %d", totalLength);
+	if(totalLength % 2 == 1)
+	{
+		strcat(full_command, NL);
+	}
+	totalLength = strlen(full_command);
+//	printf("total length after = %d", totalLength);
+
+	SendSPICommand(full_command);
 }
 
 void SetAPSSID(char *ssid)
@@ -537,9 +558,30 @@ void SetDHCPSetting(char *dhcp)
 void JoinNetwork()
 {
 	uint8_t checkReady;
-	char command[] = "C0=";
+	char command[] = "C0";
 
 	strcpy(full_command, command);
+	strcat(full_command, CR);
+
+	int totalLength = strlen(full_command);
+//	printf("total length before = %d", totalLength);
+	if(totalLength % 2 == 1)
+	{
+		strcat(full_command, NL);
+	}
+	totalLength = strlen(full_command);
+//	printf("total length after = %d", totalLength);
+
+	SendSPICommand(full_command);
+}
+
+void SetSocket(char *protocol)
+{
+	uint8_t checkReady;
+	char command[] = "P0=";
+
+	strcpy(full_command, command);
+	strcat(full_command, protocol);
 	strcat(full_command, CR);
 
 	int totalLength = strlen(full_command);
@@ -601,7 +643,7 @@ void SetPort(int port)
 void StartTCPComm()
 {
 	uint8_t checkReady;
-	char command[] = "P5=11";
+	char command[] = "P5=1";
 
 	strcpy(full_command, command);
 	strcat(full_command, CR);
@@ -641,6 +683,7 @@ void SetSocketToReopen()
 
 void StartJoinNetwork(char *ssid, char *pw)
 {
+	SetProductName("devin_test_simple");
 	SetAPSSID(ssid);
 	SetAPPassword(pw);
 	SetAPSecurityMode("3");
@@ -648,10 +691,119 @@ void StartJoinNetwork(char *ssid, char *pw)
 	JoinNetwork();
 }
 
+void GetStatus()
+{
+	//	while(true)
+	//	{
+	//		GetSPIResponse();
+	//	}
+		printf("poll for data start\r\n");
+
+		uint8_t checkReady;
+		char command[] = "P?";
+
+		strcpy(full_command, command);
+		strcat(full_command, CR);
+
+		int totalLength = strlen(full_command);
+	//	printf("total length before = %d", totalLength);
+		if(totalLength % 2 == 1)
+		{
+			strcat(full_command, NL);
+		}
+		totalLength = strlen(full_command);
+	//	printf("total length after = %d", totalLength);
+
+		SendSPICommand(full_command);
+		printf("poll for data end\r\n");
+
+	//	while(true)
+	//	{
+	//		GetSPIResponse();
+	//	}
+}
+
+void GetData()
+{
+	//	while(true)
+	//	{
+	//		GetSPIResponse();
+	//	}
+		printf("poll for data start\r\n");
+
+		uint8_t checkReady;
+		char command[] = "R0";
+
+		strcpy(full_command, command);
+		strcat(full_command, CR);
+
+		int totalLength = strlen(full_command);
+	//	printf("total length before = %d", totalLength);
+		if(totalLength % 2 == 1)
+		{
+			strcat(full_command, NL);
+		}
+		totalLength = strlen(full_command);
+	//	printf("total length after = %d", totalLength);
+
+		SendSPICommand(full_command);
+		printf("poll for data end\r\n");
+
+	//	while(true)
+	//	{
+	//		GetSPIResponse();
+	//	}
+}
+
+void SendResponse()
+{
+	//	while(true)
+	//	{
+	//		GetSPIResponse();
+	//	}
+		printf("poll for data start\r\n");
+
+		uint8_t checkReady;
+		char command[] = "S0\r01256";
+
+		strcpy(full_command, command);
+		strcat(full_command, CR);
+
+		int totalLength = strlen(full_command);
+	//	printf("total length before = %d", totalLength);
+		if(totalLength % 2 == 1)
+		{
+			strcat(full_command, NL);
+		}
+		totalLength = strlen(full_command);
+	//	printf("total length after = %d", totalLength);
+
+		SendSPICommand(full_command);
+		printf("poll for data end\r\n");
+
+	//	while(true)
+	//	{
+	//		GetSPIResponse();
+	//	}
+}
+
+void PollForData()
+{
+	GetStatus();
+	GetData();
+	SendResponse();
+	HAL_Delay(500);
+
+	PollForData();
+}
+
+
 void StartTCP(int port)
 {
+	SetSocket("0");
 	SetProtocol("0");
 	SetPort(port);
 	StartTCPComm();
-	SetSocketToReopen();
+	PollForData();
+//	SetSocketToReopen();
 }

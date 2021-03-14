@@ -24,8 +24,13 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "audio_test.h"
-#include "wifi_helpers.h"
+//#include "wifi_helpers.h"
 #include <stdbool.h>
+
+#include <WiFiST.h>
+
+#include <WiFiServerST.h>
+#include <WiFiClientST.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -206,33 +211,33 @@ int main(void)
 //  GetHelpCommand();
 
 
-	printf("path: '%s'\r\n", SDPath);
-//	double duration = 10; /*seconds*/
-
-
-	fRet = f_mount(&myFAT, SDPath, 1);
-	printf("header write result = %d\r\n", fRet);
-
-	f_open(&myFile, fname, FA_WRITE | FA_CREATE_ALWAYS);
-
-	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, FrameCount * AUDIO_REC);
-//	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, 131072);
-//	write_PCM_mono_2khz(&myFile);
-
-
-  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
-  if(ret != HAL_OK)
-  {
-	  printf("DMA on filter not started");
-  }
-   HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_RESET);
+//	printf("path: '%s'\r\n", SDPath);
+////	double duration = 10; /*seconds*/
+//
+//
+//	fRet = f_mount(&myFAT, SDPath, 1);
+////	printf("header write result = %d\r\n", fRet);
+//
+//	f_open(&myFile, fname, FA_WRITE | FA_CREATE_ALWAYS);
+//
+//	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, FrameCount * AUDIO_REC);
+////	write_PCM16_stereo_header(&myFile, SAMPLE_RATE, 131072);
+////	write_PCM_mono_2khz(&myFile);
+//
+//
+//  ret = HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, Rec1Buf, AUDIO_REC);
+//  if(ret != HAL_OK)
+//  {
+//	  printf("DMA on filter not started");
+//  }
+//   HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_RESET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	  TCPServer();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -1025,14 +1030,14 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 	//			  fRet = f_open(&myFile, fname, FA_WRITE | FA_OPEN_APPEND);// | FA_CREATE_ALWAYS);
 	//			  printf("f_open error == %d\r\n", fRet);
 		fRet = f_write(&myFile, AudioBuf, WRITE_LENGTH, &byteCount);
-		printf("f_write error == %d\r\n", fRet);
+//		printf("f_write error == %d\r\n", fRet);
 	//			  fRet = f_close(&myFile);
 	//			  printf("f_close error == %d\r\n\n", fRet);
 	}
 	if(pass == FrameCount + 20)
 	{
 	  fRet = f_close(&myFile);
-	  printf("f_close error == %d\r\n\n", fRet);
+//	  printf("f_close error == %d\r\n\n", fRet);
 	  HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
 	}
 
@@ -1043,6 +1048,7 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 void InitWifi()
 {
 	ConnectWifi(&hspi3);
+	int status = WL_IDLE_STATUS;
 	Wifi_Init();
 
 
