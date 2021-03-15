@@ -24,13 +24,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "audio_test.h"
-//#include "wifi_helpers.h"
+#include "wifi_helpers.h"
 #include <stdbool.h>
-
-#include <WiFiST.h>
-
-#include <WiFiServerST.h>
-#include <WiFiClientST.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -206,6 +201,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
   InitWifi();
+//  ResetOnClose();
+
 //  GetWifiConnectionStatus();
 //  SendHelpCommand();
 //  GetHelpCommand();
@@ -1048,11 +1045,19 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 void InitWifi()
 {
 	ConnectWifi(&hspi3);
-	int status = WL_IDLE_STATUS;
 	Wifi_Init();
 
 
 //	SetSSID();
+}
+
+void TCPServer()
+{
+	int sockets = 2;
+	for(int i = 0; i < sockets; i++)
+	{
+		ProcessSocket(i);
+	}
 }
 
 

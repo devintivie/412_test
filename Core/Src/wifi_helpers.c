@@ -13,10 +13,12 @@
 #include "main.h"
 #include <stdbool.h>
 SPI_HandleTypeDef wifi_spi;
-char spi_response[250];
+#define BUFFER_SIZE 1200
+char spi_response[BUFFER_SIZE];
 char full_command[1024];
-char *CR = "\r";
 char *NL = "\n";
+int status = WL_IDLE_STATUS;
+int sockState[2] = {SOCKET_FREE, SOCKET_FREE};
 
 void ConnectWifi(SPI_HandleTypeDef *spidef)
 {
@@ -61,11 +63,18 @@ bool IsDataPhaseReady()
 void Wifi_Init()
 {
 	WifiStartup();
-	StartJoinNetwork("DevinsHotWifi", "RickAndMorty123");
+	if(StartJoinNetwork("DevinsHotWifi", "RickAndMorty123") == ES_WIFI_STATUS_OK)
+	{
+		status = WL_CONNECTED;
+	}
+	else
+	{
+		Disconnect();
+	}
 	StartTCP(5025);
 }
 
-void GetSPIResponse()
+int GetSPIResponse(char *rbuf)
 {
 	uint8_t checkReady = GetCmdDataReady();
 	while(!IsDataPhaseReady())
@@ -90,13 +99,10 @@ void GetSPIResponse()
 		HAL_SPI_TransmitReceive(&wifi_spi, &wb2, &rb2, length, HAL_MAX_DELAY);
 		checkReady = GetCmdDataReady();
 
-		printf("i = %d, value = %0x\r\n", i, rb2[0]);
+//		printf("i = %d, value = %0x\r\n", i, rb2[0]);
 		char first = rb2[0] & 0xff;
 		char second = rb2[0] >> 8;
-		//		uint16_t first = (uint16_t)rb2[0];// && 0xff;
-//		uint16_t second = (*rb2 && 0xff00) >> 8;//   tmp[i*2+1] << 8;
 
-//		printf("wb2[i] = %0x\r\n", wb2[0]);
 		if(first != 0x15)
 		{
 			spi_response[index++] = first;
@@ -110,27 +116,74 @@ void GetSPIResponse()
 	}
 
 	printf("%s\r\n", spi_response);
-
 	Wifi_ChipDeselect();
-//	printf("ChipDeselect == [%d]\r\n", checkReady);
+	return index;
 }
 
-void SendSPICommand(char *command)
+ES_WIFI_Status_t ReceiveSPICommand(char *pdata)
+{
+	int recv_len = 0;
+	recv_len = GetSPIResponse(pdata);
+
+	if ((recv_len > 0) && (recv_len < BUFFER_SIZE))
+	{
+	    *(pdata + recv_len) = 0;
+	    if (strstr((char *)pdata, AT_OK_STRING))
+	    {
+	    	return ES_WIFI_STATUS_OK;
+	    }
+	    else
+	    {
+	    	if (strstr((char *)pdata, AT_ERROR_STRING))
+	    	{
+	    		return ES_WIFI_STATUS_ERROR;
+	    	}
+	    	else
+	    	{
+	    		/* Some data still to get. Typically with AP list */
+	    		if (recv_len == (int16_t)(BUFFER_SIZE - AT_OK_STRING_LEN - 2))
+	    		{
+	    			return ES_WIFI_STATUS_REQ_DATA_STAGE;
+	    		}
+	    	}
+		}
+	}
+	return ES_WIFI_STATUS_IO_ERROR;
+}
+
+ES_WIFI_Status_t SendSPICommand()//char *command)
 {
 	uint8_t checkReady;
-	int length = strlen(command)/2;
-	uint16_t wb[length];
-	memset(wb, 0, length);
-
-	for(int i = 0; i < length; i++)
+	printf("send spi command %s\r\n", full_command);
+	int full_length = strlen(full_command);
+	int send_length = strlen(full_command)/2;
+	memset(spi_response, 0, BUFFER_SIZE);
+	bool odd = false;
+	if(full_length % 2 == 1)
 	{
-		uint16_t lo = command[i*2];
-		uint16_t hi = command[i*2+1] << 8;
+		send_length++;
+		odd = true;
+	}
+	uint16_t wb[send_length];
+	memset(wb, 0, send_length);
+
+	for(int i = 0; i < send_length; i++)
+	{
+		uint16_t lo = full_command[i*2];
+		uint16_t hi = 0;
+		if(i == send_length - 1 && odd)
+		{
+			hi = 0x0A << 8;
+		}
+		else
+		{
+			hi = full_command[i*2+1] << 8;
+		}
 		wb[i] = lo | hi;
 
 //		printf("wb[i] = %0x\r\n", wb[i]);
 	}
-	uint16_t rb[length];
+	uint16_t rb[send_length];
 
 	//Wait for chip to be ready for command
 //	printf("waiting for chip to be ready to send spi command\r\n");
@@ -140,7 +193,7 @@ void SendSPICommand(char *command)
 	}
 
 	Wifi_ChipSelect();
-	HAL_SPI_TransmitReceive(&wifi_spi, &wb, &rb, length, HAL_MAX_DELAY);
+	HAL_SPI_TransmitReceive(&wifi_spi, &wb, &rb, send_length, HAL_MAX_DELAY);
 	Wifi_ChipDeselect();
 
 	while(IsCommandPhaseReady())
@@ -148,7 +201,7 @@ void SendSPICommand(char *command)
 
 	}
 
-	GetSPIResponse();
+	return ReceiveSPICommand(spi_response);
 
 
 }
@@ -452,358 +505,527 @@ void SetSSID()
 
 void SetProductName(char *name)
 {
-	uint8_t checkReady;
-	char command[] = "ZN=";
-
-	strcpy(full_command, command);
-	strcat(full_command, name);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "ZN=";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, name);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
 }
 
 void SetAPSSID(char *ssid)
 {
-	uint8_t checkReady;
-	char command[] = "C1=";
+//	uint8_t checkReady;
+//	char command[] = "C1=";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, ssid);
+//	strcat(full_command, CR);
 
-	strcpy(full_command, command);
-	strcat(full_command, ssid);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
+//	int totalLength = strlen(full_command);
 //	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
 //	printf("total length after = %d", totalLength);
+	sprintf((char *)full_command, "%s=%s%s", AT_NET_SET_SSID, ssid, CMD_SUFFIX);
+	SendSPICommand();//full_command);
+}
 
-	SendSPICommand(full_command);
+void Disconnect()
+{
+//	uint8_t checkReady;
+//	char command[] = "CD";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+//
+	sprintf((char *)full_command, "%s%s", AT_NET_DISCONNECT, CMD_SUFFIX);
+	SendSPICommand();//full_command);
 }
 
 void SetAPPassword(char *pass)
 {
-	uint8_t checkReady;
-	char command[] = "C2=";
-
-	strcpy(full_command, command);
-	strcat(full_command, pass);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "C2=";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, pass);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s=%s%s", AT_NET_SET_PASSPHRASE, pass, CMD_SUFFIX);
+	SendSPICommand();//full_command);
 }
 
-void SetAPSecurityMode(char *mode)
+void SetAPSecurityMode(ES_WIFI_SecurityType_t mode)
 {
-	uint8_t checkReady;
-	char command[] = "C3=";
-
-	strcpy(full_command, command);
-	strcat(full_command, mode);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "C3=";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, mode);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s=%d%s", AT_NET_SET_SECURITY_TYPE, mode, CMD_SUFFIX);
+	SendSPICommand();
 }
 
-void SetDHCPSetting(char *dhcp)
+void SetDHCPSetting(ES_WIFI_IPType_t dhcp)
 {
-	uint8_t checkReady;
-	char command[] = "C4=";
-
-	strcpy(full_command, command);
-	strcat(full_command, dhcp);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "C4=";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, dhcp);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s=%d%s", AT_NET_SET_DHCP, dhcp, CMD_SUFFIX);
+	SendSPICommand();
 }
 
-void JoinNetwork()
+
+
+ES_WIFI_Status_t JoinNetwork()
 {
-	uint8_t checkReady;
-	char command[] = "C0";
-
-	strcpy(full_command, command);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "C0";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	return SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s%s", AT_NET_JOIN, CMD_SUFFIX);
+	SendSPICommand();
 }
 
-void SetSocket(char *protocol)
+void SetSocket(int socket)
 {
-	uint8_t checkReady;
-	char command[] = "P0=";
-
-	strcpy(full_command, command);
-	strcat(full_command, protocol);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "P0=";
+//
+//	strcpy(full_command, command);
+//	char str[1];
+//	sprintf(str, "%d", socket);
+//	strcat(full_command, str);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s=%d%s", AT_TR_SET_SOCKET, socket, CMD_SUFFIX);
+	SendSPICommand();
 }
 
-void SetProtocol(char *protocol)
+void SetProtocol(ES_WIFI_ConnType_t protocol)
 {
-	uint8_t checkReady;
-	char command[] = "P1=";
-
-	strcpy(full_command, command);
-	strcat(full_command, protocol);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "P1=";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, protocol);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s=%d%s", AT_TR_SET_PROTOCOL, protocol, CMD_SUFFIX);
+	SendSPICommand();
 }
 
 void SetPort(int port)
 {
-	uint8_t checkReady;
-	char command[] = "P2=";
-
-	strcpy(full_command, command);
-	char portString[5];
-	itoa(port, portString, 10);
-	strcat(full_command, portString);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+//	uint8_t checkReady;
+//	char command[] = "P2=";
+//
+//	strcpy(full_command, command);
+//	char portString[5];
+//	itoa(port, portString, 10);
+//	strcat(full_command, portString);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s=%d%s", AT_TR_SET_LOCAL_PORT_NUMBER, port, CMD_SUFFIX);
+	SendSPICommand();
 }
 
-void StartTCPComm()
+void StartTCPComm(int socket_id)
 {
-	uint8_t checkReady;
-	char command[] = "P5=1";
+//	uint8_t checkReady;
+//	char command[] = "P5=1";
+//
+//	strcpy(full_command, command);
+//	strcat(full_command, CR);
+//
+//	int totalLength = strlen(full_command);
+////	printf("total length before = %d", totalLength);
+//	if(totalLength % 2 == 1)
+//	{
+//		strcat(full_command, NL);
+//	}
+//	totalLength = strlen(full_command);
+////	printf("total length after = %d", totalLength);
+//
+//	SendSPICommand(full_command);
+	SetSocket(socket_id);
+	sprintf((char *)full_command, "%s=1%s", AT_TR_SERVER, CMD_SUFFIX);
+	SendSPICommand();
 
-	strcpy(full_command, command);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+	WaitForSocketConnection(socket_id);
+//	CheckSocketConnection(socket_id);
 }
 
-void SetSocketToReopen()
+void ResetOnClose()
 {
-	uint8_t checkReady;
-	char command[] = "P5=10";
-
-	strcpy(full_command, command);
-	strcat(full_command, CR);
-
-	int totalLength = strlen(full_command);
-//	printf("total length before = %d", totalLength);
-	if(totalLength % 2 == 1)
-	{
-		strcat(full_command, NL);
-	}
-	totalLength = strlen(full_command);
-//	printf("total length after = %d", totalLength);
-
-	SendSPICommand(full_command);
+	sprintf((char *)full_command, "%s=11%s", AT_TR_SERVER, CMD_SUFFIX);
+	SendSPICommand();
 }
 
+//void SetSocketToReopen()
+//{
+////	uint8_t checkReady;
+////	char command[] = "P5=10";
+////
+////	strcpy(full_command, command);
+////	strcat(full_command, CR);
+////
+////	int totalLength = strlen(full_command);
+//////	printf("total length before = %d", totalLength);
+////	if(totalLength % 2 == 1)
+////	{
+////		strcat(full_command, NL);
+////	}
+////	totalLength = strlen(full_command);
+//////	printf("total length after = %d", totalLength);
+////
+////	SendSPICommand(full_command);
+//	sprintf((char *)full_command, "%s=1%s", AT_TR_SERVER, CMD_SUFFIX);
+//	SendSPICommand();
+//}
 
-void StartJoinNetwork(char *ssid, char *pw)
+
+ES_WIFI_Status_t StartJoinNetwork(char *ssid, char *pw)
 {
 	SetProductName("devin_test_simple");
 	SetAPSSID(ssid);
 	SetAPPassword(pw);
-	SetAPSecurityMode("3");
-	SetDHCPSetting("1");
-	JoinNetwork();
+	SetAPSecurityMode(ES_WIFI_SEC_WPA2);
+	SetDHCPSetting(ES_WIFI_DHCP);
+	return JoinNetwork();
 }
 
-void GetStatus()
+//void GetStatus()
+//{
+////	//	while(true)
+////	//	{
+////	//		GetSPIResponse();
+////	//	}
+////		printf("poll for data start\r\n");
+////
+////		uint8_t checkReady;
+////		char command[] = "P?";
+////
+////		strcpy(full_command, command);
+////		strcat(full_command, CR);
+////
+////		int totalLength = strlen(full_command);
+////	//	printf("total length before = %d", totalLength);
+////		if(totalLength % 2 == 1)
+////		{
+////			strcat(full_command, NL);
+////		}
+////		totalLength = strlen(full_command);
+////	//	printf("total length after = %d", totalLength);
+////
+////		SendSPICommand(full_command);
+////		printf("poll for data end\r\n");
+////
+////	//	while(true)
+////	//	{
+////	//		GetSPIResponse();
+////	//	}
+//
+//}
+
+void GetData(int socket_id)
 {
 	//	while(true)
-	//	{
-	//		GetSPIResponse();
-	//	}
-		printf("poll for data start\r\n");
+//	//	{
+//	//		GetSPIResponse();
+//	//	}
+//		printf("poll for data start\r\n");
+//
+//		uint8_t checkReady;
+//		char command[] = "R0";
+//
+//		strcpy(full_command, command);
+//		strcat(full_command, CR);
+//
+//		int totalLength = strlen(full_command);
+//	//	printf("total length before = %d", totalLength);
+//		if(totalLength % 2 == 1)
+//		{
+//			strcat(full_command, NL);
+//		}
+//		totalLength = strlen(full_command);
+//	//	printf("total length after = %d", totalLength);
+//
+//		SendSPICommand(full_command);
+//		printf("poll for data end\r\n");
+//
+//	//	while(true)
+//	//	{
+//	//		GetSPIResponse();
+//	//	}
 
-		uint8_t checkReady;
-		char command[] = "P?";
+	sprintf((char *)full_command, AT_READ_DATA);
+	SendSPICommand();
 
-		strcpy(full_command, command);
-		strcat(full_command, CR);
+	if(strstr(spi_response, "-1"))
+	{
+		sprintf((char *)full_command, "%s=0%s", AT_TR_SERVER, CMD_SUFFIX);
 
-		int totalLength = strlen(full_command);
-	//	printf("total length before = %d", totalLength);
-		if(totalLength % 2 == 1)
+		SendSPICommand();
+		sockState[socket_id] = SOCKET_FREE;
+	}
+	else
+	{
+		SendResponse("yes please");
+
+	}
+
+
+}
+
+void SendResponse(char *msg)
+{
+//	//	while(true)
+//	//	{
+//	//		GetSPIResponse();
+//	//	}
+//		printf("poll for data start\r\n");
+//
+//		uint8_t checkReady;
+//		char command[] = "S0\r01256";
+//
+//		strcpy(full_command, command);
+//		strcat(full_command, CR);
+//
+//		int totalLength = strlen(full_command);
+//	//	printf("total length before = %d", totalLength);
+//		if(totalLength % 2 == 1)
+//		{
+//			strcat(full_command, NL);
+//		}
+//		totalLength = strlen(full_command);
+//	//	printf("total length after = %d", totalLength);
+//
+//		SendSPICommand(full_command);
+//		printf("poll for data end\r\n");
+//
+//	//	while(true)
+//	//	{
+//	//		GetSPIResponse();
+//	//	}
+	int msgLen = strlen(msg);// + 3;
+	printf("msg sent = %d\r\n", msgLen);
+	sprintf((char *)full_command, "%s=%u%s", AT_WRITE_SET_PACKET_SIZE, msgLen, CMD_SUFFIX);
+	SendSPICommand();
+
+	sprintf((char *)full_command, "%s=%s%s", AT_WRITE_DATA, CMD_SUFFIX, msg);
+	SendSPICommand();
+}
+
+//void PollForData()
+//{
+//	GetStatus();
+//	GetData();
+//	SendResponse();
+//	HAL_Delay(500);
+//
+//	PollForData();
+//}
+
+int GetFreeSocket()
+{
+	for(int i = 0; i < 2; i++)
+	{
+		if (sockState[i] == SOCKET_FREE)
 		{
-			strcat(full_command, NL);
+		  return i;
 		}
-		totalLength = strlen(full_command);
-	//	printf("total length after = %d", totalLength);
-
-		SendSPICommand(full_command);
-		printf("poll for data end\r\n");
-
-	//	while(true)
-	//	{
-	//		GetSPIResponse();
-	//	}
+	}
+	return -1;
 }
 
-void GetData()
+
+ES_WIFI_Status_t CheckSocketConnection(int socket_id)
 {
-	//	while(true)
-	//	{
-	//		GetSPIResponse();
-	//	}
-		printf("poll for data start\r\n");
+//	char *ptr;
+	ES_WIFI_Status_t ret = ES_WIFI_STATUS_ERROR;
 
-		uint8_t checkReady;
-		char command[] = "R0";
+//	do
+//	{
+		sprintf((char *)full_command, "%s%s", AT_MESSAGE_READ, CMD_SUFFIX);
 
-		strcpy(full_command, command);
-		strcat(full_command, CR);
-
-		int totalLength = strlen(full_command);
-	//	printf("total length before = %d", totalLength);
-		if(totalLength % 2 == 1)
+		if(SendSPICommand() == ES_WIFI_STATUS_OK)
 		{
-			strcat(full_command, NL);
+
+			if ((strstr((char *)spi_response , "[SOMA]")) && (strstr((char *)spi_response, "[EOMA]")))
+			{
+				if (strstr((char *)spi_response, "Accepted"))
+				{
+					printf("%s\r\n", spi_response);
+	//				ptr = strtok((char *)spi_response + 2, " ");
+	//				ptr = strtok(NULL, " ");
+	//				ptr = strtok(NULL, " ");
+	//				ptr = strtok(NULL, ":");
+					ret = ES_WIFI_STATUS_OK;
+					sockState[socket_id] = SOCKET_CONNECTED;
+//					break;
+				}
+			}
 		}
-		totalLength = strlen(full_command);
-	//	printf("total length after = %d", totalLength);
-
-		SendSPICommand(full_command);
-		printf("poll for data end\r\n");
-
-	//	while(true)
-	//	{
-	//		GetSPIResponse();
-	//	}
-}
-
-void SendResponse()
-{
-	//	while(true)
-	//	{
-	//		GetSPIResponse();
-	//	}
-		printf("poll for data start\r\n");
-
-		uint8_t checkReady;
-		char command[] = "S0\r01256";
-
-		strcpy(full_command, command);
-		strcat(full_command, CR);
-
-		int totalLength = strlen(full_command);
-	//	printf("total length before = %d", totalLength);
-		if(totalLength % 2 == 1)
+		else
 		{
-			strcat(full_command, NL);
+			ret = ES_WIFI_STATUS_ERROR;
 		}
-		totalLength = strlen(full_command);
-	//	printf("total length after = %d", totalLength);
+		HAL_Delay(1000);
+//	}
+//
+//	while(1);
 
-		SendSPICommand(full_command);
-		printf("poll for data end\r\n");
 
-	//	while(true)
-	//	{
-	//		GetSPIResponse();
-	//	}
+	return ret;
 }
 
-void PollForData()
+ES_WIFI_Status_t WaitForSocketConnection(int socket_id)
 {
-	GetStatus();
-	GetData();
-	SendResponse();
-	HAL_Delay(500);
+	while(sockState[socket_id] != SOCKET_CONNECTED)
+	{
+		CheckSocketConnection(socket_id);
+	}
+}
 
-	PollForData();
+
+void ProcessSocket(int socket_id)
+{
+//	if(sockState[socket_id] == SOCKET_CONNECTED)
+//	{
+		GetData(socket_id);
+//	}
+//	else if(socket_id == SOCKET_FREE)
+//	{
+////		StartTCPComm(socket_id);
+//	}
+//	else
+//	{
+//		CheckSocketConnection(socket_id);
+//	}
+//	if(sockState[socket_id] == SOCKET_BUSY)
+//	{
+//		WaitForConnection(socket_id);
+//	}
+//	else
+//	{
+
+//	}
 }
 
 
 void StartTCP(int port)
 {
-	SetSocket("0");
-	SetProtocol("0");
-	SetPort(port);
-	StartTCPComm();
-	PollForData();
-//	SetSocketToReopen();
+	int sockNum = GetFreeSocket();
+	if(sockNum != -1)
+	{
+		sockState[sockNum] = SOCKET_BUSY;
+		SetSocket(sockNum);
+		SetProtocol(ES_WIFI_TCP_CONNECTION);
+		SetPort(port);
+		StartTCPComm(sockNum);
+//		PollForData();
+		//	SetSocketToReopen();
+	}
+
 }

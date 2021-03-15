@@ -164,6 +164,73 @@
 #define AT_SYS_SET_OTA_METHOD            "ZV"
 #define AT_SYS_SHOW_SETTINGS             "Z?"
 
-#define SUFFIX_CMD                       "\r"
+#define CMD_SUFFIX                       "\r"
+
+//Definitions
+#define WL_SSID_MAX_LENGTH 32          // Maximum size of a SSID
+#define WL_WPA_KEY_MAX_LENGTH 63       // Length of passphrase. Valid lengths are 8-63.
+#define WL_WEP_KEY_MAX_LENGTH 13       // Length of key in bytes. Valid values are 5 and 13.
+#define WL_MAC_ADDR_LENGTH 6           // Size of a MAC-address or BSSID
+#define WL_IPV4_LENGTH 4               // Size of a IPV4
+#define WL_NETWORKS_LIST_MAXNUM 10     // Maximum size of a SSID list
+#define MAX_SOCK_NUM  4                // Maximum number of socket
+#define SOCK_NOT_AVAIL  255            // Socket not available constant
+#define NA_STATE -1                    // Default state value for Wi-Fi state field
+#define WL_MAX_ATTEMPT_CONNECTION 10 //Maximum number of attempts to establish Wi-Fi connection
+#define WIFI_TIMEOUT  5000U            // Defines the Wi-Fi request timeout in milliseconds
+
+typedef enum {
+  WL_NO_SHIELD = 255,
+  WL_IDLE_STATUS = 0,
+  WL_NO_SSID_AVAIL,
+  WL_SCAN_COMPLETED,
+  WL_CONNECTED,
+  WL_CONNECT_FAILED,
+  WL_CONNECTION_LOST,
+  WL_DISCONNECTED
+} wl_status_t;
+
+typedef enum {
+  SOCKET_FREE = 0,
+  SOCKET_BUSY,
+  SOCKET_CONNECTED
+} socket_status_t;
+
+typedef enum {
+  ES_WIFI_STATUS_OK             = 0,
+  ES_WIFI_STATUS_REQ_DATA_STAGE = 1,
+  ES_WIFI_STATUS_ERROR          = 2,
+  ES_WIFI_STATUS_TIMEOUT        = 3,
+  ES_WIFI_STATUS_IO_ERROR       = 4,
+} ES_WIFI_Status_t;
+
+typedef enum {
+  ES_WIFI_MODE_SINGLE           = 0,
+  ES_WIFI_MODE_MULTI            = 1,
+} ES_WIFI_ConnMode_t;
+
+typedef enum {
+  ES_WIFI_TCP_CONNECTION        = 0,
+  ES_WIFI_UDP_CONNECTION        = 1,
+  ES_WIFI_UDP_LITE_CONNECTION   = 2,
+  ES_WIFI_TCP_SSL_CONNECTION    = 3,
+  ES_WIFI_MQTT_CONNECTION       = 4,
+} ES_WIFI_ConnType_t;
+
+/* Security settings for Wi-Fi network */
+typedef enum {
+  ES_WIFI_SEC_OPEN = 0x00,          /*!< Wi-Fi is open */
+  ES_WIFI_SEC_WEP  = 0x01,          /*!< Wired Equivalent Privacy option for Wi-Fi security. \note This mode can't be used when setting up ES_WIFI Wi-Fi */
+  ES_WIFI_SEC_WPA  = 0x02,          /*!< Wi-Fi Protected Access */
+  ES_WIFI_SEC_WPA2 = 0x03,          /*!< Wi-Fi Protected Access 2 */
+  ES_WIFI_SEC_WPA_WPA2 = 0x04,      /*!< Wi-Fi Protected Access with both modes */
+  ES_WIFI_SEC_WPA2_TKIP = 0x05,     /*!< Wi-Fi Protected Access with both modes */
+  ES_WIFI_SEC_UNKNOWN = 0xFF,       /*!< Wi-Fi Unknown Security mode */
+} ES_WIFI_SecurityType_t;
+
+typedef enum {
+  ES_WIFI_STATIC = 0x00,          /*!< Static IP */
+  ES_WIFI_DHCP  = 0x01,          /*!< Use DHCP */
+} ES_WIFI_IPType_t;
 
 #endif /* INC_INVENTEK_43362_H_ */
