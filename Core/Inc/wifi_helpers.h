@@ -22,6 +22,7 @@ void GetVersion();
 ES_WIFI_Status_t StartJoinNetwork(char *ssid, char *pw);
 ES_WIFI_Status_t ReadMessage(int socket_id);
 void StartTCP(int port);
+void StartMQTT();
 
 void SendHelpCommand();
 void GetHelpCommand();

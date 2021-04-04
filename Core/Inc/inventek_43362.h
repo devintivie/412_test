@@ -107,6 +107,7 @@
 #define AT_TR_SECURITY_CERTIFICATES      "PC"
 #define AT_TR_SECURITY_KEYS              "PD"
 #define AT_TR_TCP_KEEP_ALIVE             "PK"
+#define AT_TR_MQTT_TTRIBUTES			 "PM"
 #define AT_TR_PBM_READ_MODE              "PR"
 #define AT_TR_ETHERNET_PACKET_STAT       "PS"
 #define AT_TR_SEQUENCING                 "PT"
@@ -227,6 +228,13 @@ typedef enum {
   ES_WIFI_SEC_WPA2_TKIP = 0x05,     /*!< Wi-Fi Protected Access with both modes */
   ES_WIFI_SEC_UNKNOWN = 0xFF,       /*!< Wi-Fi Unknown Security mode */
 } ES_WIFI_SecurityType_t;
+
+/* Security settings for Wi-Fi network */
+typedef enum {
+  ES_WIFI_MQTT_SEC_NONE = 0x00,          /*!< Wi-Fi is open */
+  ES_WIFI_MQTT_SEC_USER_PASS  = 0x01,          /*!< Wired Equivalent Privacy option for Wi-Fi security. \note This mode can't be used when setting up ES_WIFI Wi-Fi */
+  ES_WIFI_MQTT_SEC_CERT_KEY  = 0x02,          /*!< Wi-Fi Protected Access */
+} ES_WIFI_MQTT_SecurityType_t;
 
 typedef enum {
   ES_WIFI_STATIC = 0x00,          /*!< Static IP */
