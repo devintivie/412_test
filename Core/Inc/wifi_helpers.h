@@ -14,13 +14,9 @@
 
 
 
-void ConnectWifi(SPI_HandleTypeDef *spidef);
+
 void Wifi_Init();
-void WifiStartup();
-void GetWifiConnectionStatus();
-void GetVersion();
 ES_WIFI_Status_t StartJoinNetwork(char *ssid, char *pw);
-ES_WIFI_Status_t ReadMessage(int socket_id);
 void StartTCP(int port);
 void StartMQTT();
 

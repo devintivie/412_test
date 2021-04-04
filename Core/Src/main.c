@@ -234,7 +234,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  TCPServer();
+	  if(GetNetworkStatus() == WL_CONNECTED)
+	  {
+		  TCPServer();
+	  }
+	  else
+	  {
+		  printf("not connected to network\r\n");
+	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

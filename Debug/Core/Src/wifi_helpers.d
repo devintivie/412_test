@@ -39,7 +39,8 @@ Core/Src/wifi_helpers.o: ../Core/Src/wifi_helpers.c \
  C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_fmpi2c.h \
  C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_fmpi2c_ex.h \
  C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dfsdm.h \
- ../Core/Inc/inventek_43362.h ../Core/Inc/main.h
+ ../Core/Inc/inventek_43362.h ../Core/Inc/main.h \
+ ../Core/Inc/inventek_43362.h
 
 ../Core/Inc/wifi_helpers.h:
 
@@ -124,3 +125,5 @@ C:/Users/devin/STM32Cube/Repository/STM32Cube_FW_F4_V1.25.2/Drivers/STM32F4xx_HA
 ../Core/Inc/inventek_43362.h:
 
 ../Core/Inc/main.h:
+
+../Core/Inc/inventek_43362.h:

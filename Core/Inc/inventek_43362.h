@@ -8,6 +8,9 @@
 #ifndef INC_INVENTEK_43362_H_
 #define INC_INVENTEK_43362_H_
 
+#include "stm32f4xx_hal.h"
+#include <stdbool.h>
+
 /* Exported macro-------------------------------------------------------------*/
 
 #define AT_OK_STRING                     "\r\nOK\r\n> "
@@ -113,7 +116,7 @@
 #define AT_TR_SEQUENCING                 "PT"
 #define AT_TR_PBM_WRITE_PACKET           "PW"
 #define AT_TR_SET_TCP_MESSAGE_TIMEOUT    "PY"
-#define AT_TR_SHOW_SETTNGS               "P?"
+#define AT_TR_SHOW_SETTINGS               "P?"
 
 /* --------------------------read command----------------------------------- */
 #define AT_READ_DATA                     "R0=\r"
@@ -240,5 +243,18 @@ typedef enum {
   ES_WIFI_STATIC = 0x00,          /*!< Static IP */
   ES_WIFI_DHCP  = 0x01,          /*!< Use DHCP */
 } ES_WIFI_IPType_t;
+
+void ConnectWifi(SPI_HandleTypeDef *spidef);
+void WifiStartup();
+
+void SetSocket(int socket);
+void SetSocketState(int socket, socket_status_t status);
+bool IsDataPhaseReady();
+void SetNetworkStatus(wl_status_t status);
+void NetworkDisconnect();
+
+void SetKeepAlive(int value1, int ms);
+
+
 
 #endif /* INC_INVENTEK_43362_H_ */
